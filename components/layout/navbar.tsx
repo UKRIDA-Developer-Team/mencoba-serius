@@ -13,15 +13,11 @@ export default function NavigationBar() {
     };
 
     return (
-        <nav className="fixed top-0 left-1/2 -translate-x-1/2 mt-4 z-50 rounded-full bg-background/80 border border-border backdrop-blur-xl px-6 py-3">
-            <div className="flex items-center justify-between gap-12">
+        <nav className="w-full border-b bg-muted/90 p-4 sticky top-0 z-50 backdrop-blur-xl">
+            <div className="w-full max-w-6xl mx-auto flex items-center justify-between">
                 <h1 className="text-lg font-bold whitespace-nowrap">Mencoba Serius</h1>
                 
                 <div className="flex items-center gap-3">
-                    <button className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer border">
-                        <ShoppingCart className="w-5 h-5 text-foreground" />
-                    </button>
-
                     <div className="relative">
                         <button 
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
