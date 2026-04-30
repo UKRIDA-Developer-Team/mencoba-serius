@@ -1,29 +1,38 @@
 "use client";
 
-import { cn } from "@/lib/utils"
-
 const PromotionalText = [
-    "Floral Design",
-    "Custom Cake",
+    "Custom Cakes",
     "Fresh Pastries",
+    "Made to Order",
+    "Floral Designs",
     "Celebration Cakes",
-    "Artisan Croissant",
-    "Floral Design",
-    "Custom Cake",
-    "Fresh Pastries",
-    "Celebration Cakes",
-    "Artisan Croissant"
+    "Artisan Croissants",
+    "Made with Love",
 ];
+
+function TrackContent({className=""}) {
+    return (
+        <>
+            {PromotionalText.map((item, i) => (
+                <span key={i} className={`flex items-center gap-8 px-6 text-white font-bold whitespace-nowrap ${className}`}>
+                    {item}
+                    <span className="select-none">·</span>
+                </span>
+            ))}
+        </>
+    );
+}
 
 export default function Marquee() {
     return (
-        <div className="overflow-hidden bg-primary py-3">
-            <div className="flex gap-10">
-                {[...PromotionalText, ...PromotionalText].map((item, i) => (
-                    <div key={i} className="whitespace-nowrap">
-                        <span className="text-white font-bold">{item}</span>
-                    </div>
-                ))}
+        <div className="overflow-hidden bg-primary py-3 m-auto">
+            <div className="flex w-max animate-marquee">
+                <span className="item-collection-1 flex items-center">
+                    <TrackContent className="item-1"/>
+                </span>
+                <span className="flex items-center">
+                    <TrackContent className="item-2"/>
+                </span>
             </div>
         </div>
     );
