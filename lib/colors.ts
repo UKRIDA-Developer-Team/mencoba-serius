@@ -9,6 +9,7 @@ export const colorWarning = "oklch(0.716 0.1076 61.0)";
 export const colorError = "oklch(0.613 0.1177 15.7)";
 export const colorInfo = "oklch(0.685 0.0666 267.9)";
 export const colorPlaceholder = "oklch(0.726 0.0210 65.0)";
+export const colorRaisedSurface = "oklch(0.974 0.008 73.74)";
 
 export const colors = {
   primary: colorPrimary,
@@ -22,6 +23,7 @@ export const colors = {
   error: colorError,
   info: colorInfo,
   placeholder: colorPlaceholder,
+  raisedSurface: colorRaisedSurface,
 } as const;
 
 export type ColorToken = keyof typeof colors;

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ShoppingCart, Home, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Logo from "@/public/favicon.png"
+import Logo from "@/public/favicon.png";
 
 const navLinks = [
     { label: "Home", href: "/", icon: Home },
@@ -17,51 +17,40 @@ export default function HeaderSection() {
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
-            <div className="relative flex items-center h-16 px-5">
-                <Image
-                    src={Logo}
-                    alt="Logo Chef On Pointe"
-                    width={50}
-                    className={cn("mx-5" )}
-                />
+            <div className="relative flex items-center h-16 px-15">
 
-                <h1 className={cn(
-                    "absolute left-1/2 -translate-x-1/2 text-base font-semibold tracking-wide text-foreground",
-                    "md:static md:left-auto md:translate-x-0 md:text-lg"
-                )}>
-                    Chef On Pointe
-                </h1>
+                <Link href="/">
+                    <Image src={Logo} alt="Logo Chef On Pointe" width={50} />
+                </Link>
+
+                <Link href="/" className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0 md:ml-4">
+                    <h1 className="text-base font-semibold tracking-wide text-foreground md:text-lg">
+                        Chef On Pointe
+                    </h1>
+                </Link>
 
                 <div className="ml-auto flex items-center gap-1">
+
                     <nav className="hidden md:flex items-center gap-1 mr-2">
-                        {navLinks.map(({ label, href }) => {
-                            const isActive = pathname === href;
-                            return (
-                                <Link
-                                    key={href}
-                                    href={href}
-                                    className={cn(
-                                        "px-4 py-1.5 text-sm font-medium rounded-lg transition-colors",
-                                        isActive
-                                            ? "text-primary font-semibold"
-                                            : "text-foreground"
-                                    )}
-                                >
-                                    {label}
-                                </Link>
-                            );
-                        })}
+                        {navLinks.map(({ label, href }) => (
+                            <Link
+                                key={href}
+                                href={href}
+                                className={cn(
+                                    "px-4 py-1.5 text-sm font-medium rounded-lg transition-colors",
+                                    pathname === href ? "text-primary font-semibold" : "text-foreground"
+                                )}
+                            >
+                                {label}
+                            </Link>
+                        ))}
                     </nav>
 
-                    <Link
-                        href="/cart"
-                        aria-label="Shopping cart"
-                        className="flex items-center justify-center w-10 h-10"
-                    >
+                    <Link href="/cart" aria-label="Shopping cart" className="flex items-center justify-center w-10 h-10">
                         <ShoppingCart size={22} strokeWidth={1.8} className="text-foreground" />
                     </Link>
-                </div>
 
+                </div>
             </div>
         </header>
     );
