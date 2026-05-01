@@ -106,6 +106,7 @@ export default function Products() {
 
                             <button className="py-2.5 font-bold w-full mt-4 bg-primary text-white text-sm hover:bg-primary/80 transition-colors duration-200">
                                 Add to Cart
+                                {/* TODO: link ke product/nama-kue/ untuk bisa cek informasi lebih lanjut */}
                             </button>
                         </div>
                     ))}

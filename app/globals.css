@@ -175,14 +175,14 @@
   }
 
   .animate-marquee {
-    animation: marquee 25s linear infinite;
+    animation: marquee 30s linear infinite;
     display: inline-block;
   }
 
   .item-collection-1 {
     position: relative;
     left: 0%;
-    animation: swap 25s linear infinite;
+    animation: swap 30s linear infinite;
   }
 
   .item-1, .item-2 {
