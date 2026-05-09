@@ -159,15 +159,19 @@
     0% {
       transform: translateX(0)
     }
+
     100% {
       transform: translateX(-100%)
     }
   }
 
   @keyframes swap {
-    0%, 50% {
+
+    0%,
+    50% {
       left: 0%;
     }
+
     50.01%,
     100% {
       left: 100%;
@@ -185,7 +189,18 @@
     animation: swap 30s linear infinite;
   }
 
-  .item-1, .item-2 {
+  .item-1,
+  .item-2 {
     display: inline-block;
+  }
+
+  @keyframes autoplay-progress {
+    0% {
+      transform: translate3d(0%, 0, 0);
+    }
+
+    100% {
+      transform: translate3d(100%, 0, 0);
+    }
   }
 }

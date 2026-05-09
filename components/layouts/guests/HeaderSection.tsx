@@ -17,16 +17,16 @@ export default function HeaderSection() {
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
-            <div className="relative flex items-center h-16 px-15">
+            <div className="relative flex items-center h-16 px-4 sm:px-6 md:px-10 max-w-screen-xl mx-auto w-full">
 
                 <Link href="/">
                     <Image src={Logo} alt="Logo Chef On Pointe" width={50} />
                 </Link>
 
                 <Link href="/" className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0 md:ml-4">
-                    <h1 className="text-base font-semibold tracking-wide text-foreground md:text-lg">
+                    <span className="text-base font-semibold tracking-wide text-foreground md:text-lg">
                         Chef On Pointe
-                    </h1>
+                    </span>
                 </Link>
 
                 <div className="ml-auto flex items-center gap-1">

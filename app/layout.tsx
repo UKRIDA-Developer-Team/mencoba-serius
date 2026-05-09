@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import React from "react";
 import { jakartaSans } from "@/lib/fonts";
 import HeaderSection from "@/components/layouts/guests/HeaderSection";
 import BottomNavbar from "@/components/layouts/guests/BottomNavbar";
@@ -7,7 +8,7 @@ import Footer from "@/components/layouts/guests/Footer";
 
 export const metadata: Metadata = {
   title: "Chef On Pointe",
-  description: "Buatan kelompok mencoba serius yang kebut semalam",
+  description: "Orang orang stress gini nih",
 };
 
 export default function RootLayout({

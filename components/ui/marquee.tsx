@@ -28,7 +28,7 @@ function TrackContent({ className = "" }: { className?: string }) {
 
 export default function Marquee() {
     return (
-        <div className="overflow-hidden bg-primary py-3 m-auto">
+        <div className="overflow-hidden bg-primary py-3 w-full">
             <div className="flex w-max animate-marquee">
                 <span className="item-collection-1 flex items-center">
                     <TrackContent className="item-1" />
