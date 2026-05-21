@@ -40,9 +40,9 @@ const currentYear = new Date().getFullYear();
 export default function Footer() {
     return (
         <footer className="my-8 px-4 sm:px-6 w-full max-w-6xl mx-auto">
-            <div className="relative bg-card rounded-3xl px-5 sm:px-8 py-8 sm:py-10 flex flex-col md:flex-row justify-between items-start gap-8 border border-border shadow-sm overflow-hidden md:overflow-visible">
-                <Tape className="hidden md:block absolute -top-5 -left-6 w-20 text-primary opacity-80 scale-75" />
-                <Tape className="hidden md:block absolute -top-5 -right-6 rotate-90 w-20 text-primary opacity-80 scale-75" />
+            <div className="relative bg-card rounded-b-xl px-5 sm:px-8 py-8 sm:py-10 flex flex-col md:flex-row justify-between items-start gap-8 border border-border shadow-sm overflow-hidden md:overflow-visible">
+                <Tape className="hidden md:block absolute -top-5 -left-6 w-20 text-primary opacity-80 scale-100" />
+                <Tape className="hidden md:block absolute -top-5 -right-6 rotate-90 w-20 text-primary opacity-80 scale-100" />
 
                 <div className="flex flex-col gap-3 max-w-xs">
                     <Link href="/" className="text-2xl font-bold text-primary leading-tight">
@@ -103,17 +103,8 @@ export default function Footer() {
                 </div>
             </div>
 
-            <div className="mt-4 px-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-muted-foreground">
+            <div className="mt-4 px-2 flex flex-col sm:flex-row justify-end items-start sm:items-center gap-2 text-xs text-muted-foreground">
                 <p>© {currentYear} Chef on Pointe. All rights reserved.</p>
-                <a
-                    href="https://www.instagram.com/chef_on_pointe/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Chef on Pointe Instagram"
-                    className="hover:text-primary transition-colors duration-150"
-                >
-                    <FaInstagram className="w-4 h-4" />
-                </a>
             </div>
         </footer>
     );
