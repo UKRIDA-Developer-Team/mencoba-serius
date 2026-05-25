@@ -1,18 +1,56 @@
-import { productStore } from "@/lib/schemas/product";
+import { db } from "@/lib/db";
+import { products, productCategories } from "@/lib/schema";
+import { eq } from "drizzle-orm";
 
 export async function GET(
     _request: Request,
     { params }: { params: Promise<{ slug: string }> }
 ) {
-    const { slug } = await params;
-    const product = productStore.find((p) => p.slug === slug);
+    try {
+        const { slug } = await params;
 
-    if (!product) {
+        const result = await db
+            .select({
+                id: products.id,
+                slug: products.slug,
+                name: products.name,
+                description: products.description,
+                basePrice: products.basePrice,
+                imagePath: products.imagePath,
+                sizeLabel: products.sizeLabel,
+                categoryName: productCategories.name,
+            })
+            .from(products)
+            .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
+            .where(eq(products.slug, slug))
+            .limit(1)
+            .execute();
+
+        if (result.length === 0) {
+            return Response.json(
+                { error: `Product with slug "${slug}" not found` },
+                { status: 404 }
+            );
+        }
+
+        const row = result[0];
+        const product = {
+            id: Number(row.id),
+            slug: row.slug,
+            name: row.name,
+            description: row.description,
+            price: Number(row.basePrice),
+            image: row.imagePath || "/product/chocolate-cake.webp",
+            category: row.categoryName || "",
+            size: row.sizeLabel || "20 cm",
+        };
+
+        return Response.json({ data: product, message: "Product fetched successfully" });
+    } catch (error) {
+        console.error("Error fetching product:", error);
         return Response.json(
-            { error: `Product with slug "${slug}" not found` },
-            { status: 404 }
+            { error: "Failed to fetch product" },
+            { status: 500 }
         );
     }
-
-    return Response.json({ data: product, message: "Product fetched successfully" });
 }

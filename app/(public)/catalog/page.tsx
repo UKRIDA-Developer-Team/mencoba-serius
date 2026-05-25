@@ -18,12 +18,12 @@ export default async function CatalogPage({
     const selectedCategory = params.category?.trim() || "";
     const search = params.search?.trim() || "";
 
-    const products = getProducts({
+    const products = await getProducts({
         search: search || undefined,
         category: selectedCategory || undefined,
     });
 
-    const categories = Array.from(new Set(getProducts().map((product) => product.category)));
+    const categories = Array.from(new Set((await getProducts()).map((product) => product.category)));
 
     return (
         <section className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8 space-y-6">

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getProducts } from "@/lib/data/product";
 
 export default async function Products() {
-    const products = getProducts();
+    const products = await getProducts();
 
     return (
         <section className="my-6 px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto" aria-label="Produk Pilihan">

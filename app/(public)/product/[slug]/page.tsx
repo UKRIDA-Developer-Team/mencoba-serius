@@ -12,7 +12,7 @@ export async function generateMetadata({
     params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
     const { slug } = await params;
-    const product = getProductBySlug(slug);
+    const product = await getProductBySlug(slug);
 
     if (!product) {
         return {
@@ -32,7 +32,7 @@ export default async function ProductCakePage({
     params: Promise<{ slug: string }>;
 }) {
     const { slug } = await params;
-    const product = getProductBySlug(slug);
+    const product = await getProductBySlug(slug);
 
     if (!product) notFound();
 

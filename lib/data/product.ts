@@ -1,36 +1,115 @@
-import { productStore } from "@/lib/schemas/product";
+import { db } from "@/lib/db";
+import { products, productCategories } from "@/lib/schema";
+import { eq, like, and, desc } from "drizzle-orm";
 import type { Product } from "@/lib/schemas/product";
 
-export function getProducts(options?: {
+// Map database product to frontend Product type
+function mapDbProductToProduct(dbProduct: any, categoryName: string): Product {
+    return {
+        id: Number(dbProduct.id),
+        slug: dbProduct.slug,
+        name: dbProduct.name,
+        description: dbProduct.description || "",
+        price: Number(dbProduct.basePrice),
+        image: dbProduct.imagePath || "/product/chocolate-cake.webp",
+        category: categoryName,
+        size: dbProduct.sizeLabel || "20 cm",
+    };
+}
+
+export async function getProducts(options?: {
     search?: string;
     category?: string;
-}): Product[] {
-    let results = [...productStore];
+}): Promise<Product[]> {
+    try {
+        let query = db
+            .select({
+                id: products.id,
+                slug: products.slug,
+                name: products.name,
+                description: products.description,
+                basePrice: products.basePrice,
+                imagePath: products.imagePath,
+                sizeLabel: products.sizeLabel,
+                categoryName: productCategories.name,
+            })
+            .from(products)
+            .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
+            .where(eq(products.isActive, true));
 
-    if (options?.search) {
-        const search = options.search.toLowerCase();
-        results = results.filter((p) => p.name.toLowerCase().includes(search));
+        if (options?.search) {
+            const searchTerm = `%${options.search.toLowerCase()}%`;
+            query = query.where(like(products.name, searchTerm));
+        }
+
+        if (options?.category) {
+            query = query.where(eq(productCategories.name, options.category));
+        }
+
+        const result = await query.execute();
+
+        return result.map((row) =>
+            mapDbProductToProduct(row, row.categoryName || "")
+        );
+    } catch (error) {
+        console.error("Error fetching products:", error);
+        return [];
     }
+}
 
-    if (options?.category) {
-        const category = options.category.toLowerCase();
-        results = results.filter((p) => p.category.toLowerCase() === category);
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+    try {
+        const result = await db
+            .select({
+                id: products.id,
+                slug: products.slug,
+                name: products.name,
+                description: products.description,
+                basePrice: products.basePrice,
+                imagePath: products.imagePath,
+                sizeLabel: products.sizeLabel,
+                categoryName: productCategories.name,
+            })
+            .from(products)
+            .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
+            .where(eq(products.slug, slug))
+            .limit(1)
+            .execute();
+
+        if (result.length === 0) return null;
+
+        return mapDbProductToProduct(result[0], result[0].categoryName || "");
+    } catch (error) {
+        console.error("Error fetching product by slug:", error);
+        return null;
     }
-
-    return results;
 }
 
-export function getProductBySlug(slug: string): Product | null {
-    return productStore.find((p) => p.slug === slug) ?? null;
-}
+export async function getRecommendedProducts(): Promise<Product[]> {
+    try {
+        const result = await db
+            .select({
+                id: products.id,
+                slug: products.slug,
+                name: products.name,
+                description: products.description,
+                basePrice: products.basePrice,
+                imagePath: products.imagePath,
+                sizeLabel: products.sizeLabel,
+                categoryName: productCategories.name,
+            })
+            .from(products)
+            .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
+            .where(eq(products.isActive, true))
+            .orderBy(desc(products.id))
+            .limit(5)
+            .execute();
 
-/* Math.max dari semua id yang ada, bukan .length + 1, supaya aman saat ada produk yang dihapus */
-export function generateNextId(): number {
-    if (productStore.length === 0) return 1;
-    return Math.max(...productStore.map((p) => p.id)) + 1;
-}
-
-/* TODO: ganti slice ini dengan produk yang dikurasi/dipinned dari database */
-export function getRecommendedProducts(): Product[] {
-    return productStore.slice(0, 5);
+        return result.map((row) =>
+            mapDbProductToProduct(row, row.categoryName || "")
+        );
+    } catch (error) {
+        console.error("Error fetching recommended products:", error);
+        return [];
+    }
 }
