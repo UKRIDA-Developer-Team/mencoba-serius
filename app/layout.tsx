@@ -2,13 +2,21 @@ import type { Metadata } from "next";
 import "./globals.css";
 import React from "react";
 import { jakartaSans } from "@/lib/fonts";
-import HeaderSection from "@/components/layouts/guests/HeaderSection";
-import BottomNavbar from "@/components/layouts/guests/BottomNavbar";
-import Footer from "@/components/layouts/guests/Footer";
+import { CartProvider } from "@/features/guest/components/cart/CartProvider";
 
 export const metadata: Metadata = {
-  title: "Chef On Pointe",
-  description: "Orang orang stress gini nih",
+  title: "Chef On Pointe - Kue Custom & Pastry Artisan",
+  description: "Kue custom dan pastry artisan dibuat dengan cinta untuk perayaan Anda. Pesan kue ulang tahun, pernikahan, dan acara spesial lainnya.",
+  keywords: "kue custom, pastry, kue ulang tahun, kue pernikahan, kue custom jakarta",
+  authors: [{ name: "Chef On Pointe" }],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    url: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
+    title: "Chef On Pointe - Kue Custom & Pastry Artisan",
+    description: "Kue custom dan pastry artisan dibuat dengan cinta untuk perayaan Anda.",
+  },
 };
 
 export default function RootLayout({
@@ -17,14 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${jakartaSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
-        <HeaderSection />
-        <main className="flex-1 pt-16 pb-16 md:pb-0">
+    <html lang="id" className={`${jakartaSans.variable} antialiased`}>
+      <body className="min-h-screen flex flex-col bg-background text-foreground">
+        <CartProvider>
           {children}
-        </main>
-        <BottomNavbar />
-        <Footer />
+        </CartProvider>
       </body>
     </html>
   );
