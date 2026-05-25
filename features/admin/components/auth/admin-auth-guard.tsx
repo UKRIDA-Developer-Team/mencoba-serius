@@ -9,16 +9,15 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Don't require auth for login page
-    const isLoginPage = pathname === "/admin/login";
+    const isAuthPage = pathname?.includes("/auth/");
 
     useEffect(() => {
-        if (isLoginPage) {
+        if (isAuthPage) {
             setIsLoading(false);
             return;
         }
 
-        // Check if user is authenticated
+        // For protected pages, check token
         const token = localStorage.getItem("admin_token");
         
         if (token) {
@@ -26,9 +25,9 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
             setIsLoading(false);
         } else {
             // Redirect to login
-            router.push("/admin/login");
+            router.replace("/login");
         }
-    }, [router, isLoginPage]);
+    }, [router, isAuthPage]);
 
     if (isLoading) {
         return (
@@ -41,9 +40,11 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
         );
     }
 
-    if (!isLoginPage && !isAuthenticated) {
-        return null;
+    // Allow render for auth pages and authenticated users
+    if (isAuthPage || isAuthenticated) {
+        return <>{children}</>;
     }
 
-    return <>{children}</>;
+    // Should not reach here, but return null as fallback
+    return null;
 }

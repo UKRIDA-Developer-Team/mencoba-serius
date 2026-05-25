@@ -15,7 +15,7 @@ export function SidebarProfile({ isCollapsed, isMobile }: SidebarProfileProps) {
     const handleLogout = () => {
         localStorage.removeItem("admin_token");
         localStorage.removeItem("admin_username");
-        router.push("/admin/login");
+        router.push("/login");
         router.refresh();
     };
     return (
