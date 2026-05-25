@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +10,14 @@ type SidebarProfileProps = {
 };
 
 export function SidebarProfile({ isCollapsed, isMobile }: SidebarProfileProps) {
+    const router = useRouter();
+
+    const handleLogout = () => {
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_username");
+        router.push("/admin/login");
+        router.refresh();
+    };
     return (
         <div className="shrink-0 border-t border-border bg-card">
             <div className={cn("p-3", isCollapsed && !isMobile ? "px-2" : "")}>
@@ -35,6 +44,7 @@ export function SidebarProfile({ isCollapsed, isMobile }: SidebarProfileProps) {
 
                 <button
                     type="button"
+                    onClick={handleLogout}
                     className={cn(
                         "mt-2 flex items-center gap-3 rounded-lg px-2 py-2 text-sm text-foreground/65 transition-colors hover:bg-muted hover:text-foreground",
                         isCollapsed && !isMobile ? "justify-center" : "w-full"
