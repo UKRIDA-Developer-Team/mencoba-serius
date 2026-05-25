@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export default function HeroSection() {
     return (
@@ -22,6 +23,13 @@ export default function HeroSection() {
                     </Button>
                 </div>
             </div>
+            <Image
+                src="/product/banner.jpeg"
+                alt="Hero Image"
+                width={800}
+                height={600}
+                className="absolute top-0 right-0 w-full h-full object-cover opacity-40 md:opacity-50"
+            />
         </div>
     );
 }
