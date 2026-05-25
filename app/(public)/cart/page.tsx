@@ -4,11 +4,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/features/guest/components/cart/CartProvider";
+import { generateWhatsAppCheckoutLink } from "@/lib/utils/whatsapp";
 
 export default function CartPage() {
     const { items, totalItems, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
     const estimatedDeliveryFee = totalItems > 0 ? 25000 : 0;
     const grandTotal = totalPrice + estimatedDeliveryFee;
+
+    const handleCheckout = () => {
+        if (items.length === 0) return;
+        
+        const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "62812345678";
+        const link = generateWhatsAppCheckoutLink(items, grandTotal, whatsappNumber);
+        window.open(link, "_blank");
+    };
 
     return (
         <section className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
@@ -127,7 +136,9 @@ export default function CartPage() {
                             </div>
                         </div>
 
-                        <Button className="w-full h-10">Proceed to Checkout</Button>
+                        <Button className="w-full h-10" onClick={handleCheckout} disabled={items.length === 0}>
+                            Proceed to Checkout
+                        </Button>
                         <div className="grid grid-cols-2 gap-2">
                             <Link
                                 href="/catalog"
