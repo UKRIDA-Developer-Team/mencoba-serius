@@ -1,6 +1,6 @@
 export const metadata = {
-    title: "Login — Chef On Pointe",
-    description: "Login to Chef On Pointe admin control center.",
+    title: "Login Admin — Chef On Pointe",
+    description: "Masuk ke pusat kontrol admin Chef On Pointe untuk mengelola produk dan pesanan.",
 };
 
 export default function AuthLayout({

@@ -6,9 +6,9 @@ export default async function Products() {
     const products = getProducts();
 
     return (
-        <section className="my-6 px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto">
+        <section className="my-6 px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto" aria-label="Produk Pilihan">
             <h2 className="text-3xl font-bold text-primary mt-3 mb-7 text-center">
-                Our Products
+                Produk Kami
             </h2>
 
             <div>
@@ -21,7 +21,7 @@ export default async function Products() {
                             <div className="relative aspect-square w-full bg-card">
                                 <Image
                                     src={product.image}
-                                    alt={product.name}
+                                    alt={`${product.name} - ${product.category} cake, ${product.size}`}
                                     fill
                                     className="object-contain"
                                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"

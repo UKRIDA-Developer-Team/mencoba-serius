@@ -2,11 +2,11 @@ import Link from "next/link";
 import { FaInstagram } from "react-icons/fa";
 
 const catalogLinks = [
-    { label: "All Cakes", href: "/catalog" },
-    { label: "Birthday Cakes", href: "/catalog?category=Birthday" },
-    { label: "Wedding Cakes", href: "/catalog?category=Wedding" },
-    { label: "Anniversary", href: "/catalog?category=Anniversary" },
-    { label: "Special Cakes", href: "/catalog?category=Special" },
+    { label: "Semua Kue", href: "/catalog" },
+    { label: "Kue Ulang Tahun", href: "/catalog?category=Birthday" },
+    { label: "Kue Pernikahan", href: "/catalog?category=Wedding" },
+    { label: "Kue Anniversary", href: "/catalog?category=Anniversary" },
+    { label: "Kue Spesial", href: "/catalog?category=Special" },
 ];
 
 const Tape = ({ className }: { className?: string }) => (
@@ -42,15 +42,16 @@ export default function Footer() {
                         Chef on Pointe
                     </Link>
                     <p className="text-sm text-foreground/70 leading-relaxed">
-                        Handcrafted celebration cakes made with love birthday, wedding, anniversary & custom orders.
+                        Kue perayaan buatan tangan dengan cinta untuk ulang tahun, pernikahan, anniversary & pesanan custom.
                     </p>
                     <a
                         href="https://www.instagram.com/chef_on_pointe/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 mt-1 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200"
+                        aria-label="Follow Chef On Pointe on Instagram"
                     >
-                        <FaInstagram className="w-4 h-4" />
+                        <FaInstagram className="w-4 h-4" aria-hidden="true" />
                         @chef_on_pointe
                     </a>
                 </div>
@@ -73,13 +74,14 @@ export default function Footer() {
                     </div>
 
                     <div className="flex flex-col gap-3">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact</h4>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kontak</h4>
                         <div className="flex flex-col gap-2 text-sm">
                             <a
                                 href="https://www.instagram.com/chef_on_pointe/"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-foreground/70 hover:text-primary transition-colors duration-150"
+                                aria-label="Kunjungi halaman Instagram kami"
                             >
                                 Instagram
                             </a>
@@ -88,6 +90,7 @@ export default function Footer() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-1.5 text-foreground/70 hover:text-primary transition-colors duration-150"
+                                aria-label="Hubungi kami di WhatsApp"
                             >
                                 WhatsApp
                             </a>
@@ -97,7 +100,7 @@ export default function Footer() {
             </div>
 
             <div className="mt-4 px-2 flex flex-col sm:flex-row justify-end items-start sm:items-center gap-2 text-xs text-muted-foreground">
-                <p>© {currentYear} Chef on Pointe. All rights reserved.</p>
+                <p>© {currentYear} Chef On Pointe. Semua hak dilindungi.</p>
             </div>
         </footer>
     );

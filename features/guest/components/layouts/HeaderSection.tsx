@@ -5,12 +5,12 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ShoppingCart, Home, BookOpen, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Logo from "@/public/favicon.png";
+import Logo from "@/public/Chef-on-Pointe.webp";
 import { useCart } from "@/features/guest/components/cart/CartProvider";
 
 const navLinks = [
-    { label: "Home", href: "/", icon: Home },
-    { label: "Catalog", href: "/catalog", icon: BookOpen },
+    { label: "Beranda", href: "/", icon: Home },
+    { label: "Katalog", href: "/catalog", icon: BookOpen },
     { label: "Admin", href: "/admin", icon: Shield },
 ];
 
@@ -27,8 +27,8 @@ export default function HeaderSection() {
         <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
             <div className="relative flex items-center h-16 px-4 sm:px-6 md:px-10 max-w-screen-xl mx-auto w-full">
 
-                <Link href="/">
-                    <Image src={Logo} alt="Logo Chef On Pointe" width={50} />
+                <Link href="/" aria-label="Chef On Pointe - Go to home">
+                    <Image src={Logo} alt="Chef On Pointe logo" width={50} />
                 </Link>
 
                 <Link href="/" className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0 md:ml-4">

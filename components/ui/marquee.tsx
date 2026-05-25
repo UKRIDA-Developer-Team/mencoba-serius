@@ -1,13 +1,13 @@
 "use client";
 
 const promotionalText = [
-    "Custom Cakes",
-    "Fresh Pastries",
-    "Made to Order",
-    "Floral Designs",
-    "Celebration Cakes",
-    "Artisan Croissants",
-    "Made with Love",
+    "Kue Custom",
+    "Pastry Segar",
+    "Dibuat Sesuai Pesanan",
+    "Desain Floral",
+    "Kue Perayaan",
+    "Croissant Artisan",
+    "Dibuat dengan Cinta",
 ];
 
 function TrackContent({ className = "" }: { className?: string }) {

@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import HeroSection from "@/features/guest/components/layouts/Hero";
 import Marquee from "@/components/ui/marquee";
 import Products from "@/features/guest/components/layouts/Products";
 import Recomendation from "@/features/guest/components/layouts/Recomendation";
+
+export const metadata: Metadata = {
+  title: "Beranda - Kue Custom & Pastry Artisan | Chef On Pointe",
+  description: "Pesan kue custom dan pastry artisan untuk ulang tahun, pernikahan, anniversary, dan acara spesial Anda. Dibuat dengan bahan berkualitas tinggi.",
+};
 
 export default function Home() {
   return (

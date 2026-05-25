@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import AddToCartButton from "@/features/guest/components/cart/AddToCartButton";
 import { getProducts } from "@/lib/data/product";
+
+export const metadata: Metadata = {
+  title: "Katalog Kue - Pilih Kue Favorit Anda | Chef On Pointe",
+  description: "Jelajahi koleksi lengkap kue custom kami. Kue ulang tahun, pernikahan, anniversary, dan pastry spesial lainnya.",
+};
 
 export default async function CatalogPage({
     searchParams,
@@ -22,20 +28,22 @@ export default async function CatalogPage({
     return (
         <section className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8 space-y-6">
             <div className="space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-semibold text-primary">Catalog</h1>
+                <h1 className="text-2xl sm:text-3xl font-semibold text-primary">Katalog Kue</h1>
                 <p className="text-sm text-foreground/70">
-                    Browse cakes, check details quickly, and add to cart in one tap.
+                    Jelajahi koleksi kue kami, lihat detail dengan cepat, dan tambahkan ke keranjang dalam satu klik.
                 </p>
             </div>
 
-            <form className="bg-card border border-border rounded-xl p-4 grid sm:grid-cols-[1fr_auto_auto] gap-3">
-                <label className="flex flex-col gap-2 text-sm">
-                    Search cake name
+            <form className="bg-card border border-border rounded-xl p-4 grid sm:grid-cols-[1fr_auto_auto] gap-3" role="search">
+                <label htmlFor="search-cakes" className="flex flex-col gap-2 text-sm">
+                    Cari nama kue
                     <input
+                        id="search-cakes"
                         type="text"
                         name="search"
                         defaultValue={search}
-                        placeholder="Example: Chocolate"
+                        placeholder="Contoh: Coklat"
+                        aria-label="Cari kue berdasarkan nama"
                         className="h-10 rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                     />
                 </label>

@@ -24,7 +24,7 @@ export default function LoginPage() {
 
         // Simple validation
         if (!username || !password) {
-            setError("Username and password are required");
+            setError("Username dan password wajib diisi");
             setIsLoading(false);
             return;
         }
@@ -39,7 +39,7 @@ export default function LoginPage() {
             router.push("/admin");
             router.refresh();
         } else {
-            setError("Invalid username or password");
+            setError("Username atau password salah");
             setIsLoading(false);
         }
     };
@@ -48,16 +48,16 @@ export default function LoginPage() {
         <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted/50 px-4">
             <Card className="w-full max-w-md shadow-lg">
                 <CardHeader className="space-y-2 text-center">
-                    <CardTitle className="text-2xl">Admin Login</CardTitle>
+                    <CardTitle className="text-2xl">Login Admin</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                        Chef On Pointe Admin Control Center
+                        Pusat Kontrol Admin Chef On Pointe
                     </p>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {error && (
-                            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-                                <AlertCircle className="size-4 shrink-0" />
+                            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert" aria-live="polite">
+                                <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
                                 <span>{error}</span>
                             </div>
                         )}
@@ -69,7 +69,7 @@ export default function LoginPage() {
                             <Input
                                 id="username"
                                 type="text"
-                                placeholder="Enter username"
+                                placeholder="Masukkan username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 disabled={isLoading}
@@ -84,7 +84,7 @@ export default function LoginPage() {
                             <Input
                                 id="password"
                                 type="password"
-                                placeholder="Enter password"
+                                placeholder="Masukkan password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 disabled={isLoading}
@@ -97,7 +97,7 @@ export default function LoginPage() {
                             className="w-full" 
                             disabled={isLoading}
                         >
-                            {isLoading ? "Signing in..." : "Sign In"}
+                            {isLoading ? "Masuk..." : "Masuk"}
                         </Button>
 
                         <p className="text-xs text-muted-foreground text-center pt-2">

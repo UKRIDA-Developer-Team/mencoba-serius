@@ -1,9 +1,30 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug } from "@/lib/data/product";
 import AddToCartButton from "@/features/guest/components/cart/AddToCartButton";
 import { Button } from "@/components/ui/button";
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+    const { slug } = await params;
+    const product = getProductBySlug(slug);
+
+    if (!product) {
+        return {
+            title: "Produk Tidak Ditemukan",
+        };
+    }
+
+    return {
+        title: `${product.name} - ${product.category} | Chef On Pointe`,
+        description: product.description,
+    };
+}
 
 export default async function ProductCakePage({
     params,
@@ -16,16 +37,16 @@ export default async function ProductCakePage({
     if (!product) notFound();
 
     return (
-        <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
-            <Link href="/" className="text-sm text-primary hover:underline mb-6 inline-block">
-                Back to Home
+        <main className="w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+            <Link href="/" className="text-sm text-primary hover:underline mb-6 inline-block" aria-label="Kembali ke halaman utama">
+                Kembali ke Beranda
             </Link>
 
             <div className="overflow-hidden rounded-xl">
                 <div className="relative w-full aspect-square">
                     <Image
                         src={product.image}
-                        alt={product.name}
+                        alt={`${product.name} - ${product.category} cake, ${product.size}, priced at Rp ${product.price.toLocaleString('id-ID')}`}
                         fill
                         className="object-contain"
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, 672px"
@@ -65,6 +86,6 @@ export default async function ProductCakePage({
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     );
 }
