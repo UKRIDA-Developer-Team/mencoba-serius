@@ -3,6 +3,7 @@ import { FaInstagram } from "react-icons/fa";
 
 const catalogLinks = [
     { label: "Semua Kue", href: "/catalog" },
+    { label: "Berdasarkan Kategori", href: "/category" },
     { label: "Kue Ulang Tahun", href: "/catalog?category=Birthday" },
     { label: "Kue Pernikahan", href: "/catalog?category=Wedding" },
     { label: "Kue Anniversary", href: "/catalog?category=Anniversary" },
