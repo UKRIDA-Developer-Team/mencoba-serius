@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       .where(eq(measurementUnits.code, "g"))
       .limit(1);
 
-    const baseUnitId = baseUnit.length > 0 ? baseUnit[0].id : 1n;
+    const baseUnitId = baseUnit.length > 0 ? baseUnit[0].id : BigInt(1);
 
     const result = await db
       .insert(ingredients)

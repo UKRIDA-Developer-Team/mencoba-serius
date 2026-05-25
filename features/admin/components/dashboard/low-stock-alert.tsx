@@ -1,9 +1,9 @@
 "use client";
 
-import { type IngredientStock } from "@/lib/data/inventory";
+import { type AdminIngredient } from "@/lib/data/admin";
 
 type LowStockAlertProps = {
-    items: IngredientStock[];
+    items: AdminIngredient[];
 };
 
 export default function LowStockAlert({ items }: LowStockAlertProps) {
