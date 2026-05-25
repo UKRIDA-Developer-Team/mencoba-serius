@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useMemo } from "react";
-import { lowStockSeverity, type IngredientStock } from "@/lib/data/inventory";
+import { type AdminIngredient } from "@/lib/data/admin";
 import { type IngredientForm } from "@/features/admin/types/forms";
 import { StockBadge } from "@/features/admin/components/common/stock-badge";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,14 @@ import {
 } from "@/components/ui/table";
 import { Search, Plus, Package } from "lucide-react";
 
+const lowStockSeverity = (item: AdminIngredient): "critical" | "warning" | "ok" => {
+    if (item.currentStockBaseQty === 0) return "critical";
+    if (item.currentStockBaseQty < item.reorderLevelBaseQty) return "warning";
+    return "ok";
+};
+
 type IngredientTableProps = {
-    ingredients: IngredientStock[];
+    ingredients: AdminIngredient[];
     search: string;
     onSearchChange: (value: string) => void;
     form: IngredientForm;

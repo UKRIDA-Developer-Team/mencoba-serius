@@ -1,13 +1,7 @@
 "use client";
 
-import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import {
-    isLowStock,
-    seededIngredientStocks,
-    seededProductManagementItems,
-    type IngredientStock,
-    type ProductManagementItem,
-} from "@/lib/data/inventory";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type AdminIngredient, type AdminProduct } from "@/lib/data/admin";
 import { type IngredientForm, type ProductForm } from "@/features/admin/types/forms";
 
 import StatCards from "@/features/admin/components/dashboard/stat-cards";
@@ -16,15 +10,19 @@ import IngredientTable from "@/features/admin/components/dashboard/ingredient-ta
 import ProductList from "@/features/admin/components/dashboard/product-list";
 import Toast from "@/features/admin/components/dashboard/toast";
 
+const isLowStock = (item: AdminIngredient) => item.currentStockBaseQty < item.reorderLevelBaseQty;
+
 export default function AdminPage() {
     // --- State ---
-    const [ingredients, setIngredients] = useState<IngredientStock[]>(seededIngredientStocks);
-    const [products, setProducts] = useState<ProductManagementItem[]>(seededProductManagementItems);
+    const [ingredients, setIngredients] = useState<AdminIngredient[]>([]);
+    const [products, setProducts] = useState<AdminProduct[]>([]);
+    const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [ingredientSearch, setIngredientSearch] = useState("");
     const [productSearch, setProductSearch] = useState("");
 
-    // P1: Consolidated form state — one object per form, not one useState per field
+    // Form state
     const [ingredientForm, setIngredientForm] = useState<IngredientForm>({
         name: "", sku: "", reorder: "",
     });
@@ -32,21 +30,55 @@ export default function AdminPage() {
         name: "", slug: "", price: "", category: "Special",
     });
 
-    // P7: Toast feedback state
+    // Toast feedback state
     const [toast, setToast] = useState<string | null>(null);
 
-    // P4: useRef counter — safe unique IDs, keeps id: number (matches DB BIGSERIAL)
-    const ingredientIdRef = useRef(Math.max(...seededIngredientStocks.map((i) => i.id)) + 1);
-    const productIdRef = useRef(Math.max(...seededProductManagementItems.map((p) => p.id)) + 1);
+    // Fetch data from APIs on mount
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setIsLoading(true);
+                const [ingredRes, prodRes, catRes] = await Promise.all([
+                    fetch("/api/admin/ingredients"),
+                    fetch("/api/admin/products"),
+                    fetch("/api/admin/categories"),
+                ]);
 
-    // P7: Auto-clear toast after 3 s
+                if (!ingredRes.ok || !prodRes.ok || !catRes.ok) {
+                    throw new Error("Failed to fetch admin data");
+                }
+
+                const ingredData = await ingredRes.json();
+                const prodData = await prodRes.json();
+                const catData = await catRes.json();
+
+                if (ingredData.success) setIngredients(ingredData.data);
+                if (prodData.success) setProducts(prodData.data);
+                if (catData.success) setCategories(catData.data);
+
+                // Set default category from DB
+                if (catData.success && catData.data.length > 0) {
+                    setProductForm((prev) => ({ ...prev, category: catData.data[0].name }));
+                }
+            } catch (error) {
+                console.error("Error fetching admin data:", error);
+                setToast("Gagal memuat data");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    // Auto-clear toast after 3s
     useEffect(() => {
         if (!toast) return;
         const timer = setTimeout(() => setToast(null), 3000);
         return () => clearTimeout(timer);
     }, [toast]);
 
-    // P3: All derived values via useMemo — consistent, no recalc on unrelated renders
+    // Filtered data via useMemo
     const filteredIngredients = useMemo(() => {
         if (!ingredientSearch) return ingredients;
         const q = ingredientSearch.toLowerCase();
@@ -81,59 +113,86 @@ export default function AdminPage() {
         [products, ingredients, lowStockItems]
     );
 
-    // P6: Named handler functions defined outside return — not inline in JSX
-
-    function handleAddIngredient(event: FormEvent<HTMLFormElement>) {
+    // Form handlers
+    async function handleAddIngredient(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const reorderLevel = Number(ingredientForm.reorder || 0);
         if (!ingredientForm.name || !ingredientForm.sku || reorderLevel < 0) return;
 
-        setIngredients((prev) => [
-            ...prev,
-            {
-                id: ingredientIdRef.current++, // P4: ref counter, no ID collision
-                sku: ingredientForm.sku.toUpperCase(),
-                name: ingredientForm.name,
-                baseUnitCode: "g",
-                reorderLevelBaseQty: reorderLevel,
-                currentStockBaseQty: 0,
-                preferredSupplier: "Nusantara Baking Supply",
-                isActive: true,
-            },
-        ]);
-        setIngredientForm({ name: "", sku: "", reorder: "" }); // P1: reset whole object
-        setToast("Ingredient added successfully!"); // P7
+        try {
+            const response = await fetch("/api/admin/ingredients", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    sku: ingredientForm.sku.toUpperCase(),
+                    name: ingredientForm.name,
+                    reorderLevelBaseQty: reorderLevel,
+                }),
+            });
+
+            if (!response.ok) throw new Error("Failed to add ingredient");
+
+            const data = await response.json();
+            setIngredients((prev) => [...prev, data.data]);
+            setIngredientForm({ name: "", sku: "", reorder: "" });
+            setToast("Ingredient ditambahkan!");
+        } catch (error) {
+            console.error("Error adding ingredient:", error);
+            setToast("Gagal menambahkan ingredient");
+        }
     }
 
-    function handleAddProduct(event: FormEvent<HTMLFormElement>) {
+    async function handleAddProduct(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const basePrice = Number(productForm.price || 0);
         if (!productForm.name || !productForm.slug || basePrice <= 0) return;
 
-        setProducts((prev) => [
-            ...prev,
-            {
-                id: productIdRef.current++, // P4: ref counter, no ID collision
-                slug: productForm.slug.toLowerCase(),
-                name: productForm.name,
-                category: productForm.category,
-                basePrice,
-                sizeLabel: "20 cm",
-                isCustomizable: true,
-                isPreorderOnly: false,
-                isActive: true,
-            },
-        ]);
-        setProductForm({ name: "", slug: "", price: "", category: "Special" }); // P1: reset whole object
-        setToast("Product added successfully!"); // P7
+        try {
+            const response = await fetch("/api/admin/products", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    slug: productForm.slug.toLowerCase(),
+                    name: productForm.name,
+                    category: productForm.category,
+                    basePrice,
+                }),
+            });
+
+            if (!response.ok) throw new Error("Failed to add product");
+
+            const data = await response.json();
+            setProducts((prev) => [...prev, data.data]);
+            setProductForm({ name: "", slug: "", price: "", category: productForm.category });
+            setToast("Produk ditambahkan!");
+        } catch (error) {
+            console.error("Error adding product:", error);
+            setToast("Gagal menambahkan produk");
+        }
     }
 
-    function handleToggleProductActive(slug: string) {
-        setProducts((prev) =>
-            prev.map((entry) =>
-                entry.slug === slug ? { ...entry, isActive: !entry.isActive } : entry
-            )
-        );
+    async function handleToggleProductActive(slug: string) {
+        try {
+            const product = products.find((p) => p.slug === slug);
+            if (!product) return;
+
+            const response = await fetch(`/api/admin/products/${product.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isActive: !product.isActive }),
+            });
+
+            if (!response.ok) throw new Error("Failed to update product");
+
+            setProducts((prev) =>
+                prev.map((entry) =>
+                    entry.slug === slug ? { ...entry, isActive: !entry.isActive } : entry
+                )
+            );
+        } catch (error) {
+            console.error("Error toggling product active state:", error);
+            setToast("Gagal mengupdate produk");
+        }
     }
 
     function handleIngredientFormChange(field: keyof IngredientForm, value: string) {
@@ -142,6 +201,16 @@ export default function AdminPage() {
 
     function handleProductFormChange(field: keyof ProductForm, value: string) {
         setProductForm((prev) => ({ ...prev, [field]: value }));
+    }
+
+    if (isLoading) {
+        return (
+            <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-12 pb-8">
+                <div className="flex items-center justify-center h-96">
+                    <p className="text-lg text-muted-foreground">Loading...</p>
+                </div>
+            </section>
+        );
     }
 
     return (
@@ -178,6 +247,7 @@ export default function AdminPage() {
                     onFormChange={handleProductFormChange}
                     onSubmit={handleAddProduct}
                     onToggleActive={handleToggleProductActive}
+                    categories={categories}
                 />
             </section>
 

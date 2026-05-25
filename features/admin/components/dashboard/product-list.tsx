@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useMemo } from "react";
-import { type ProductManagementItem } from "@/lib/data/inventory";
+import { type AdminProduct } from "@/lib/data/admin";
 import { type ProductForm } from "@/features/admin/types/forms";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,16 +23,15 @@ function formatIDR(value: number) {
     });
 }
 
-const CATEGORIES = ["Birthday", "Wedding", "Anniversary", "Special"] as const;
-
 type ProductListProps = {
-    products: ProductManagementItem[];
+    products: AdminProduct[];
     search: string;
     onSearchChange: (value: string) => void;
     form: ProductForm;
     onFormChange: (field: keyof ProductForm, value: string) => void;
     onSubmit: (event: FormEvent<HTMLFormElement>) => void;
     onToggleActive: (slug: string) => void;
+    categories: Array<{ id: string; name: string }>;
 };
 
 export default function ProductList({
@@ -43,6 +42,7 @@ export default function ProductList({
     onFormChange,
     onSubmit,
     onToggleActive,
+    categories,
 }: ProductListProps) {
     const filtered = useMemo(() => {
         if (!search.trim()) return products;
@@ -169,9 +169,9 @@ export default function ProductList({
                                     <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {CATEGORIES.map((cat) => (
-                                        <SelectItem key={cat} value={cat}>
-                                            {cat}
+                                    {categories.map((cat) => (
+                                        <SelectItem key={cat.id} value={cat.name}>
+                                            {cat.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
