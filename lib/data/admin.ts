@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { ingredients, products, productCategories, suppliers, measurementUnits } from "@/lib/schema";
+import { ingredients, products, productCategories, suppliers, measurementUnits, ingredientStockMovements } from "@/lib/schema";
 import { desc, eq } from "drizzle-orm";
 
 export type AdminIngredient = {
@@ -30,6 +30,43 @@ export type AdminCategory = {
   name: string;
   description: string | null;
 };
+
+/**
+ * Calculate current stock for an ingredient from stock movements
+ * Stock = IN - OUT - ADJUSTMENT (where ADJUSTMENT can be positive or negative)
+ */
+async function calculateIngredientStock(ingredientId: bigint, baseUnitId: bigint): Promise<number> {
+  try {
+    const movements = await db
+      .select({
+        movementType: ingredientStockMovements.movementType,
+        quantity: ingredientStockMovements.quantity,
+      })
+      .from(ingredientStockMovements)
+      .where(
+        eq(ingredientStockMovements.ingredientId, ingredientId) &&
+        eq(ingredientStockMovements.unitId, baseUnitId)
+      );
+
+    let stock = 0;
+    for (const movement of movements) {
+      const qty = Number(movement.quantity);
+      if (movement.movementType === "IN") {
+        stock += qty;
+      } else if (movement.movementType === "OUT") {
+        stock -= qty;
+      } else if (movement.movementType === "ADJUSTMENT") {
+        // ADJUSTMENT can be positive or negative, it's already signed
+        stock += qty;
+      }
+    }
+
+    return Math.max(0, stock); // Ensure stock doesn't go negative
+  } catch (error) {
+    console.error("Error calculating ingredient stock:", error);
+    return 0;
+  }
+}
 
 /**
  * Get all ingredients for admin dashboard
@@ -74,13 +111,16 @@ export async function getAdminIngredients(): Promise<AdminIngredient[]> {
         unitCode = unit[0].code;
       }
 
+      // Calculate stock from movements
+      const currentStock = await calculateIngredientStock(item.id, item.baseUnitId);
+
       enriched.push({
         id: item.id.toString(),
         sku: item.sku,
         name: item.name,
         baseUnitCode: unitCode,
         reorderLevelBaseQty: Number(item.reorderLevelBaseQty),
-        currentStockBaseQty: 0, // TODO: Calculate from inventory_movements
+        currentStockBaseQty: currentStock,
         preferredSupplier: supplierName,
         isActive: item.isActive,
       });
