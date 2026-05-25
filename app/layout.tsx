@@ -15,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${jakartaSans.variable} h-screen antialiased overflow-hidden`}>
-      <body className="h-screen flex flex-col bg-background text-foreground">
+    <html lang="en" className={`${jakartaSans.variable} antialiased`}>
+      <body className="min-h-screen flex flex-col bg-background text-foreground">
         <CartProvider>
           {children}
         </CartProvider>
