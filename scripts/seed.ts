@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
-import { productCategories, products } from "@/lib/schema";
+import { productCategories, products, admins } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import * as bcrypt from "bcryptjs";
 
 const categories = [
   { name: "Birthday", description: "Kue untuk perayaan ulang tahun" },
@@ -177,6 +178,28 @@ async function seed() {
 
         console.log(`  ✓ Created product "${product.name}"`);
       }
+    }
+
+    // 3. Seed admin user
+    console.log("👨‍💼 Seeding admin user...");
+    const existing = await db
+      .select()
+      .from(admins)
+      .where(eq(admins.username, "admin"))
+      .limit(1);
+
+    if (existing.length > 0) {
+      console.log("  ✓ Admin user already exists");
+    } else {
+      const hashedPassword = await bcrypt.hash("admin123", 10);
+      await db.insert(admins).values({
+        username: "admin",
+        email: "admin@chefon pointe.local",
+        password: hashedPassword,
+        fullName: "Chef On Pointe Admin",
+        isActive: true,
+      });
+      console.log("  ✓ Created admin user (username: admin, password: admin123)");
     }
 
     console.log("✅ Database seed completed successfully!");

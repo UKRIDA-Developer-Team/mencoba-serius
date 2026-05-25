@@ -415,3 +415,18 @@ export const payments = pgTable("payments", {
     foreignColumns: [salesOrders.id],
   }).onDelete("cascade"),
 }));
+
+export const admins = pgTable("admins", {
+  id: bigserial("id", { mode: "bigint" }).primaryKey(),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  fullName: text("full_name"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});

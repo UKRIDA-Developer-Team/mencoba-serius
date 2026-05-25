@@ -14,33 +14,48 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
-    const ADMIN_USERNAME = "admin";
-    const ADMIN_PASSWORD = "admin123";
-
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError("");
         setIsLoading(true);
 
-        // Simple validation
+        // Validation
         if (!username || !password) {
             setError("Username dan password wajib diisi");
             setIsLoading(false);
             return;
         }
 
-        // Mock authentication
-        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        try {
+            // Call login API
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.message || "Login gagal");
+                setIsLoading(false);
+                return;
+            }
+
             // Store auth token in localStorage
             localStorage.setItem("admin_token", "authenticated");
-            localStorage.setItem("admin_username", username);
+            localStorage.setItem("admin_username", data.admin.username);
+            localStorage.setItem("admin_email", data.admin.email);
             
             // Redirect to admin dashboard
             router.push("/admin");
             router.refresh();
-        } else {
-            setError("Username atau password salah");
+        } catch (err) {
+            setError("Terjadi kesalahan. Silakan coba lagi.");
             setIsLoading(false);
+            console.error("Login error:", err);
         }
     };
 
