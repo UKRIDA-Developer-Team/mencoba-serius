@@ -11,7 +11,6 @@ import {
   foreignKey,
   primaryKey,
   unique,
-  check,
 } from "drizzle-orm/pg-core";
 
 // ==============================
@@ -72,7 +71,7 @@ export const measurementUnits = pgTable("measurement_units", {
   id: bigserial("id", { mode: "bigint" }).primaryKey(),
   code: text("code").notNull().unique(),
   name: text("name").notNull(),
-  unitType: text("unit_type").notNull(), // 'mass', 'volume', 'count', 'package'
+  unitType: text("unit_type").notNull(),
   isBaseUnit: boolean("is_base_unit").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -94,8 +93,8 @@ export const suppliers = pgTable("suppliers", {
 export const customers = pgTable("customers", {
   id: bigserial("id", { mode: "bigint" }).primaryKey(),
   fullName: text("full_name").notNull(),
-  phone: text("phone"),
-  email: text("email"),
+  phone: text("phone").unique(),
+  email: text("email").unique(),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -132,7 +131,12 @@ export const products = pgTable("products", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (table) => ({
+  categoryFk: foreignKey({
+    columns: [table.categoryId],
+    foreignColumns: [productCategories.id],
+  }),
+}));
 
 export const ingredients = pgTable("ingredients", {
   id: bigserial("id", { mode: "bigint" }).primaryKey(),
@@ -156,18 +160,41 @@ export const ingredients = pgTable("ingredients", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (table) => ({
+  baseUnitFk: foreignKey({
+    columns: [table.baseUnitId],
+    foreignColumns: [measurementUnits.id],
+  }),
+  preferredSupplierFk: foreignKey({
+    columns: [table.preferredSupplierId],
+    foreignColumns: [suppliers.id],
+  }),
+}));
 
-export const ingredientUnitMap = pgTable("ingredient_unit_map", {
-  ingredientId: bigserial("ingredient_id", { mode: "bigint" }).notNull(),
-  unitId: bigserial("unit_id", { mode: "bigint" }).notNull(),
-  toBaseMultiplier: numeric("to_base_multiplier", {
-    precision: 18,
-    scale: 8,
-  }).notNull(),
-  isPurchaseUnit: boolean("is_purchase_unit").notNull().default(false),
-  isRecipeUnit: boolean("is_recipe_unit").notNull().default(true),
-});
+export const ingredientUnitMap = pgTable(
+  "ingredient_unit_map",
+  {
+    ingredientId: bigserial("ingredient_id", { mode: "bigint" }).notNull(),
+    unitId: bigserial("unit_id", { mode: "bigint" }).notNull(),
+    toBaseMultiplier: numeric("to_base_multiplier", {
+      precision: 18,
+      scale: 8,
+    }).notNull(),
+    isPurchaseUnit: boolean("is_purchase_unit").notNull().default(false),
+    isRecipeUnit: boolean("is_recipe_unit").notNull().default(true),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.ingredientId, table.unitId] }),
+    ingredientFk: foreignKey({
+      columns: [table.ingredientId],
+      foreignColumns: [ingredients.id],
+    }).onDelete("cascade"),
+    unitFk: foreignKey({
+      columns: [table.unitId],
+      foreignColumns: [measurementUnits.id],
+    }),
+  })
+);
 
 export const productRecipeIngredients = pgTable("product_recipe_ingredients", {
   id: bigserial("id", { mode: "bigint" }).primaryKey(),
@@ -182,7 +209,20 @@ export const productRecipeIngredients = pgTable("product_recipe_ingredients", {
     .notNull()
     .default("0"),
   notes: text("notes"),
-});
+}, (table) => ({
+  productFk: foreignKey({
+    columns: [table.productId],
+    foreignColumns: [products.id],
+  }).onDelete("cascade"),
+  ingredientUnitFk: foreignKey({
+    columns: [table.ingredientId, table.unitId],
+    foreignColumns: [ingredientUnitMap.ingredientId, ingredientUnitMap.unitId],
+  }),
+  uniqueProductIngredient: unique().on(
+    table.productId,
+    table.ingredientId
+  ),
+}));
 
 // ==============================
 // INVENTORY TRANSACTIONS
@@ -204,7 +244,12 @@ export const purchaseOrders = pgTable("purchase_orders", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (table) => ({
+  supplierFk: foreignKey({
+    columns: [table.supplierId],
+    foreignColumns: [suppliers.id],
+  }),
+}));
 
 export const purchaseOrderItems = pgTable("purchase_order_items", {
   id: bigserial("id", { mode: "bigint" }).primaryKey(),
@@ -214,24 +259,45 @@ export const purchaseOrderItems = pgTable("purchase_order_items", {
   quantity: numeric("quantity", { precision: 14, scale: 4 }).notNull(),
   unitCost: numeric("unit_cost", { precision: 14, scale: 2 }).notNull(),
   notes: text("notes"),
-});
+}, (table) => ({
+  poFk: foreignKey({
+    columns: [table.purchaseOrderId],
+    foreignColumns: [purchaseOrders.id],
+  }).onDelete("cascade"),
+  ingredientUnitFk: foreignKey({
+    columns: [table.ingredientId, table.unitId],
+    foreignColumns: [ingredientUnitMap.ingredientId, ingredientUnitMap.unitId],
+  }),
+}));
 
-export const ingredientStockMovements = pgTable("ingredient_stock_movements", {
-  id: bigserial("id", { mode: "bigint" }).primaryKey(),
-  ingredientId: bigserial("ingredient_id", { mode: "bigint" }).notNull(),
-  unitId: bigserial("unit_id", { mode: "bigint" }).notNull(),
-  movementType: inventoryMovementTypeEnum("movement_type").notNull(),
-  quantity: numeric("quantity", { precision: 14, scale: 4 }).notNull(),
-  movementAt: timestamp("movement_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  referenceType: text("reference_type"),
-  referenceId: bigserial("reference_id", { mode: "bigint" }),
-  notes: text("notes"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const ingredientStockMovements = pgTable(
+  "ingredient_stock_movements",
+  {
+    id: bigserial("id", { mode: "bigint" }).primaryKey(),
+    ingredientId: bigserial("ingredient_id", { mode: "bigint" }).notNull(),
+    unitId: bigserial("unit_id", { mode: "bigint" }).notNull(),
+    movementType: inventoryMovementTypeEnum("movement_type").notNull(),
+    quantity: numeric("quantity", { precision: 14, scale: 4 }).notNull(),
+    movementAt: timestamp("movement_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    referenceType: text("reference_type"),
+    referenceId: bigserial("reference_id", { mode: "bigint" }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    ingredientUnitFk: foreignKey({
+      columns: [table.ingredientId, table.unitId],
+      foreignColumns: [
+        ingredientUnitMap.ingredientId,
+        ingredientUnitMap.unitId,
+      ],
+    }),
+  })
+);
 
 // ==============================
 // SALES / POS / PRE-ORDER / CUSTOM CAKE
@@ -267,7 +333,12 @@ export const salesOrders = pgTable("sales_orders", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (table) => ({
+  customerFk: foreignKey({
+    columns: [table.customerId],
+    foreignColumns: [customers.id],
+  }),
+}));
 
 export const salesOrderItems = pgTable("sales_order_items", {
   id: bigserial("id", { mode: "bigint" }).primaryKey(),
@@ -277,7 +348,16 @@ export const salesOrderItems = pgTable("sales_order_items", {
   quantity: numeric("quantity", { precision: 12, scale: 2 }).notNull(),
   unitPrice: numeric("unit_price", { precision: 14, scale: 2 }).notNull(),
   notes: text("notes"),
-});
+}, (table) => ({
+  soFk: foreignKey({
+    columns: [table.salesOrderId],
+    foreignColumns: [salesOrders.id],
+  }).onDelete("cascade"),
+  productFk: foreignKey({
+    columns: [table.productId],
+    foreignColumns: [products.id],
+  }),
+}));
 
 export const customCakeRequests = pgTable("custom_cake_requests", {
   id: bigserial("id", { mode: "bigint" }).primaryKey(),
@@ -305,7 +385,17 @@ export const customCakeRequests = pgTable("custom_cake_requests", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (table) => ({
+  soiFk: foreignKey({
+    columns: [table.salesOrderItemId],
+    foreignColumns: [salesOrderItems.id],
+  }).onDelete("cascade"),
+  customerFk: foreignKey({
+    columns: [table.customerId],
+    foreignColumns: [customers.id],
+  }),
+  uniqueSalesOrderItem: unique().on(table.salesOrderItemId),
+}));
 
 export const payments = pgTable("payments", {
   id: bigserial("id", { mode: "bigint" }).primaryKey(),
@@ -319,4 +409,9 @@ export const payments = pgTable("payments", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (table) => ({
+  soFk: foreignKey({
+    columns: [table.salesOrderId],
+    foreignColumns: [salesOrders.id],
+  }).onDelete("cascade"),
+}));
