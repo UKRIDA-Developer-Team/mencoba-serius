@@ -11,7 +11,18 @@ export async function GET(request: NextRequest) {
         const search = searchParams.get("search");
         const category = searchParams.get("category");
 
-        let query = db
+        const conditions = [eq(products.isActive, true)];
+
+        if (search) {
+            const searchTerm = `%${search.toLowerCase()}%`;
+            conditions.push(like(products.name, searchTerm));
+        }
+
+        if (category) {
+            conditions.push(eq(productCategories.name, category));
+        }
+
+        const result = await db
             .select({
                 id: products.id,
                 slug: products.slug,
@@ -24,18 +35,8 @@ export async function GET(request: NextRequest) {
             })
             .from(products)
             .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
-            .where(eq(products.isActive, true));
-
-        if (search) {
-            const searchTerm = `%${search.toLowerCase()}%`;
-            query = query.where(like(products.name, searchTerm));
-        }
-
-        if (category) {
-            query = query.where(eq(productCategories.name, category));
-        }
-
-        const result = await query.execute();
+            .where(and(...conditions))
+            .execute();
 
         const mapped = result.map((row) => ({
             id: Number(row.id),

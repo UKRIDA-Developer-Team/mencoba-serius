@@ -22,7 +22,18 @@ export async function getProducts(options?: {
     category?: string;
 }): Promise<Product[]> {
     try {
-        let query = db
+        const conditions = [eq(products.isActive, true)];
+
+        if (options?.search) {
+            const searchTerm = `%${options.search.toLowerCase()}%`;
+            conditions.push(like(products.name, searchTerm));
+        }
+
+        if (options?.category) {
+            conditions.push(eq(productCategories.name, options.category));
+        }
+
+        const result = await db
             .select({
                 id: products.id,
                 slug: products.slug,
@@ -35,18 +46,8 @@ export async function getProducts(options?: {
             })
             .from(products)
             .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
-            .where(eq(products.isActive, true));
-
-        if (options?.search) {
-            const searchTerm = `%${options.search.toLowerCase()}%`;
-            query = query.where(like(products.name, searchTerm));
-        }
-
-        if (options?.category) {
-            query = query.where(eq(productCategories.name, options.category));
-        }
-
-        const result = await query.execute();
+            .where(and(...conditions))
+            .execute();
 
         return result.map((row) =>
             mapDbProductToProduct(row, row.categoryName || "")
