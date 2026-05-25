@@ -2,11 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { products } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { verifyAdminToken } from "@/lib/auth/middleware";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Verify JWT token
+  const adminToken = verifyAdminToken(request);
+  if (!adminToken) {
+    return NextResponse.json(
+      { success: false, message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   try {
     const { id } = params;
     const body = await request.json();
@@ -48,6 +58,54 @@ export async function PATCH(
     console.error("Error updating product:", error);
     return NextResponse.json(
       { success: false, message: "Gagal mengupdate produk" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  // Verify JWT token
+  const adminToken = verifyAdminToken(request);
+  if (!adminToken) {
+    return NextResponse.json(
+      { success: false, message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const { id } = params;
+
+    const result = await db
+      .delete(products)
+      .where(eq(products.id, BigInt(id)))
+      .returning();
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Produk tidak ditemukan" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Produk berhasil dihapus",
+        data: {
+          id: result[0].id.toString(),
+          slug: result[0].slug,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    return NextResponse.json(
+      { success: false, message: "Gagal menghapus produk" },
       { status: 500 }
     );
   }

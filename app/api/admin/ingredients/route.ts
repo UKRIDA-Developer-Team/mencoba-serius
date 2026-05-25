@@ -3,8 +3,18 @@ import { getAdminIngredients } from "@/lib/data/admin";
 import { db } from "@/lib/db";
 import { ingredients, measurementUnits } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { verifyAdminToken } from "@/lib/auth/middleware";
 
 export async function GET(request: NextRequest) {
+  // Verify JWT token
+  const adminToken = verifyAdminToken(request);
+  if (!adminToken) {
+    return NextResponse.json(
+      { success: false, message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   try {
     const ingredientList = await getAdminIngredients();
     return NextResponse.json(
@@ -21,6 +31,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Verify JWT token
+  const adminToken = verifyAdminToken(request);
+  if (!adminToken) {
+    return NextResponse.json(
+      { success: false, message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   try {
     const body = await request.json();
     const { sku, name, reorderLevelBaseQty } = body;

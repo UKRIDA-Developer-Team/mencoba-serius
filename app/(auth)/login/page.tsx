@@ -44,10 +44,11 @@ export default function LoginPage() {
                 return;
             }
 
-            // Store auth token in localStorage
-            localStorage.setItem("admin_token", "authenticated");
+            // Store JWT token and admin info
+            localStorage.setItem("admin_token", data.token);
             localStorage.setItem("admin_username", data.admin.username);
             localStorage.setItem("admin_email", data.admin.email);
+            localStorage.setItem("admin_id", data.admin.id);
             
             // Redirect to admin dashboard
             router.push("/admin");

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { admins } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
+import { signJWT } from "@/lib/auth/jwt";
 
 export async function POST(request: NextRequest) {
   try {
@@ -103,10 +104,19 @@ export async function POST(request: NextRequest) {
 
     // Successful login
     console.info(`Successful login for admin: ${sanitizedUsername}`);
+    
+    const token = signJWT({
+      id: adminUser.id.toString(),
+      username: adminUser.username,
+      email: adminUser.email,
+      fullName: adminUser.fullName || undefined,
+    });
+
     return NextResponse.json(
       {
         success: true,
         message: "Login berhasil",
+        token,
         admin: {
           id: adminUser.id.toString(),
           username: adminUser.username,

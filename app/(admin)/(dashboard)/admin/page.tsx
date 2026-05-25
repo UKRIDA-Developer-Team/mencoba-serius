@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { type AdminIngredient, type AdminProduct } from "@/lib/data/admin";
 import { type IngredientForm, type ProductForm } from "@/features/admin/types/forms";
+import { authenticatedFetch } from "@/lib/auth/client";
 
 import StatCards from "@/features/admin/components/dashboard/stat-cards";
 import LowStockAlert from "@/features/admin/components/dashboard/low-stock-alert";
@@ -39,9 +40,9 @@ export default function AdminPage() {
             try {
                 setIsLoading(true);
                 const [ingredRes, prodRes, catRes] = await Promise.all([
-                    fetch("/api/admin/ingredients"),
-                    fetch("/api/admin/products"),
-                    fetch("/api/admin/categories"),
+                    authenticatedFetch("/api/admin/ingredients"),
+                    authenticatedFetch("/api/admin/products"),
+                    authenticatedFetch("/api/admin/categories"),
                 ]);
 
                 if (!ingredRes.ok || !prodRes.ok || !catRes.ok) {
@@ -120,7 +121,7 @@ export default function AdminPage() {
         if (!ingredientForm.name || !ingredientForm.sku || reorderLevel < 0) return;
 
         try {
-            const response = await fetch("/api/admin/ingredients", {
+            const response = await authenticatedFetch("/api/admin/ingredients", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -148,7 +149,7 @@ export default function AdminPage() {
         if (!productForm.name || !productForm.slug || basePrice <= 0) return;
 
         try {
-            const response = await fetch("/api/admin/products", {
+            const response = await authenticatedFetch("/api/admin/products", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -176,7 +177,7 @@ export default function AdminPage() {
             const product = products.find((p) => p.slug === slug);
             if (!product) return;
 
-            const response = await fetch(`/api/admin/products/${product.id}`, {
+            const response = await authenticatedFetch(`/api/admin/products/${product.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ isActive: !product.isActive }),
