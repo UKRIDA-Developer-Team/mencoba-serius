@@ -21,14 +21,14 @@ export function useAdminState(
   const [ingredientSearch, setIngredientSearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
 
-  // Sync with API data changes
+  // Sync with API data changes - only update when data actually changes
   useEffect(() => {
     setIngredientsState(initialIngredients);
-  }, [initialIngredients]);
+  }, [initialIngredients.length]);
 
   useEffect(() => {
     setProductsState(initialProducts);
-  }, [initialProducts]);
+  }, [initialProducts.length]);
 
   // Wrapper to accept both values and updater functions
   const setIngredients = useCallback((items: AdminIngredient[] | ((prev: AdminIngredient[]) => AdminIngredient[])) => {
