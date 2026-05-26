@@ -2,11 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { type AdminProduct } from "@/lib/data/admin";
-import { useAdminData } from "@/features/admin/hooks/use-admin-data";
-import { useAdminState } from "@/features/admin/hooks/use-admin-state";
-import { useAdminFilters } from "@/features/admin/hooks/use-admin-filters";
-import { useToast } from "@/features/admin/hooks/use-toast";
-import { useAdminForms } from "@/features/admin/hooks/use-admin-forms";
+import { useAdminData, useAdminState, useAdminFilters, useToast, useAdminForms } from "@/features/admin/hooks";
 import { authenticatedFetch } from "@/lib/auth/client";
 
 import { Button } from "@/components/ui/button";

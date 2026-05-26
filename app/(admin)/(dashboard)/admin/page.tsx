@@ -2,11 +2,7 @@
 
 import React from "react";
 import { type AdminIngredient, type AdminProduct } from "@/lib/data/admin";
-import { useAdminData } from "@/features/admin/hooks/use-admin-data";
-import { useAdminState } from "@/features/admin/hooks/use-admin-state";
-import { useAdminFilters } from "@/features/admin/hooks/use-admin-filters";
-import { useToast } from "@/features/admin/hooks/use-toast";
-import { useAdminForms } from "@/features/admin/hooks/use-admin-forms";
+import { useAdminData, useAdminState, useAdminFilters, useToast, useAdminForms } from "@/features/admin/hooks";
 
 import StatCards from "@/features/admin/components/dashboard/stat-cards";
 import LowStockAlert from "@/features/admin/components/dashboard/low-stock-alert";

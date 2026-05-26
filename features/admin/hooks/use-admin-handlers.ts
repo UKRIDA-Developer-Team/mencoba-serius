@@ -1,15 +1,16 @@
 import { type AdminIngredient, type AdminProduct } from "@/lib/data/admin";
-import { useAdminForms } from "./use-admin-forms";
-import { useToast } from "./use-toast";
+import { type IngredientForm, type ProductForm } from "@/features/admin/types/forms";
+import { useAdminForms } from "./forms";
+import { useToast } from "./ui";
 
 interface UseAdminHandlersReturn {
   handleAddIngredient: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   handleAddProduct: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   handleToggleProductActive: (slug: string) => Promise<void>;
-  ingredientForm: any;
-  productForm: any;
-  handleIngredientFormChange: (field: any, value: string) => void;
-  handleProductFormChange: (field: any, value: string) => void;
+  ingredientForm: IngredientForm;
+  productForm: ProductForm;
+  handleIngredientFormChange: (field: keyof IngredientForm, value: string) => void;
+  handleProductFormChange: (field: keyof ProductForm, value: string) => void;
 }
 
 interface HandlerCallbacks {
@@ -35,7 +36,7 @@ export function useAdminHandlers(
 
   const handleAddIngredient = async (e: React.FormEvent<HTMLFormElement>) => {
     try {
-      await apiAddIngredient(e, (data) => {
+      await apiAddIngredient(e, (data: AdminIngredient) => {
         callbacks.onIngredientAdded(data);
         showToast("Ingredient ditambahkan!");
       });
@@ -46,7 +47,7 @@ export function useAdminHandlers(
 
   const handleAddProduct = async (e: React.FormEvent<HTMLFormElement>) => {
     try {
-      await apiAddProduct(e, (data) => {
+      await apiAddProduct(e, (data: AdminProduct) => {
         callbacks.onProductAdded(data);
         showToast("Produk ditambahkan!");
       });
