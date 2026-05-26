@@ -2,21 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ingredients } from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { verifyAdminToken } from "@/lib/auth/middleware";
+import { withAdminAuth } from "@/lib/auth/middleware";
 
-export async function DELETE(
+const deleteHandler = async (
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
-  // Verify JWT token
-  const adminToken = verifyAdminToken(request);
-  if (!adminToken) {
-    return NextResponse.json(
-      { success: false, message: "Unauthorized" },
-      { status: 401 }
-    );
-  }
-
+) => {
   try {
     const { id } = params;
 
@@ -50,4 +41,6 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+};
+
+export const DELETE = withAdminAuth(deleteHandler);

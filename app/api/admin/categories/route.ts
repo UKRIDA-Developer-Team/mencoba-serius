@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminCategories } from "@/lib/data/admin";
-import { verifyAdminToken } from "@/lib/auth/middleware";
+import { withAdminAuth } from "@/lib/auth/middleware";
 
-export async function GET(request: NextRequest) {
-  // Verify JWT token
-  const adminToken = verifyAdminToken(request);
-  if (!adminToken) {
-    return NextResponse.json(
-      { success: false, message: "Unauthorized" },
-      { status: 401 }
-    );
-  }
-
+const getHandler = async (request: NextRequest) => {
   try {
     const categories = await getAdminCategories();
     return NextResponse.json(
@@ -25,4 +16,6 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+export const GET = withAdminAuth(getHandler);

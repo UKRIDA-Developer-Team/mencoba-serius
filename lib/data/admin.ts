@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { ingredients, products, productCategories, suppliers, measurementUnits, ingredientStockMovements } from "@/lib/schema";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 
 export type AdminIngredient = {
   id: string;
@@ -69,7 +69,7 @@ async function calculateIngredientStock(ingredientId: bigint, baseUnitId: bigint
 }
 
 /**
- * Get all ingredients for admin dashboard
+ * Get all ingredients for admin dashboard with JOINs (optimized - no N+1)
  */
 export async function getAdminIngredients(): Promise<AdminIngredient[]> {
   try {
@@ -82,35 +82,17 @@ export async function getAdminIngredients(): Promise<AdminIngredient[]> {
         reorderLevelBaseQty: ingredients.reorderLevelBaseQty,
         preferredSupplierId: ingredients.preferredSupplierId,
         isActive: ingredients.isActive,
+        supplierName: suppliers.name,
+        unitCode: measurementUnits.code,
       })
       .from(ingredients)
+      .leftJoin(suppliers, eq(ingredients.preferredSupplierId, suppliers.id))
+      .leftJoin(measurementUnits, eq(ingredients.baseUnitId, measurementUnits.id))
       .orderBy(desc(ingredients.id));
 
-    // Map to admin format with supplier names and unit codes
+    // Map to admin format - calculate stock for each ingredient
     const enriched: AdminIngredient[] = [];
     for (const item of result) {
-      // Fetch supplier name
-      let supplierName = "Unknown";
-      if (item.preferredSupplierId) {
-        const supplier = await db
-          .select({ name: suppliers.name })
-          .from(suppliers)
-          .where(eq(suppliers.id, item.preferredSupplierId));
-        if (supplier.length > 0) {
-          supplierName = supplier[0].name;
-        }
-      }
-
-      // Fetch unit code
-      let unitCode = "g";
-      const unit = await db
-        .select({ code: measurementUnits.code })
-        .from(measurementUnits)
-        .where(eq(measurementUnits.id, item.baseUnitId));
-      if (unit.length > 0) {
-        unitCode = unit[0].code;
-      }
-
       // Calculate stock from movements
       const currentStock = await calculateIngredientStock(item.id, item.baseUnitId);
 
@@ -118,10 +100,10 @@ export async function getAdminIngredients(): Promise<AdminIngredient[]> {
         id: item.id.toString(),
         sku: item.sku,
         name: item.name,
-        baseUnitCode: unitCode,
+        baseUnitCode: item.unitCode || "g",
         reorderLevelBaseQty: Number(item.reorderLevelBaseQty),
         currentStockBaseQty: currentStock,
-        preferredSupplier: supplierName,
+        preferredSupplier: item.supplierName || "Unknown",
         isActive: item.isActive,
       });
     }
@@ -134,7 +116,7 @@ export async function getAdminIngredients(): Promise<AdminIngredient[]> {
 }
 
 /**
- * Get all products for admin dashboard
+ * Get all products for admin dashboard with JOINs (optimized - no N+1)
  */
 export async function getAdminProducts(): Promise<AdminProduct[]> {
   try {
@@ -149,33 +131,23 @@ export async function getAdminProducts(): Promise<AdminProduct[]> {
         isCustomizable: products.isCustomizable,
         isPreorderOnly: products.isPreorderOnly,
         isActive: products.isActive,
+        categoryName: productCategories.name,
       })
       .from(products)
+      .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
       .orderBy(desc(products.id));
 
-    // Map to admin format with category names
-    const enriched: AdminProduct[] = [];
-    for (const item of result) {
-      // Fetch category name
-      const category = await db
-        .select({ name: productCategories.name })
-        .from(productCategories)
-        .where(eq(productCategories.id, item.categoryId));
-
-      enriched.push({
-        id: item.id.toString(),
-        slug: item.slug,
-        name: item.name,
-        category: category.length > 0 ? category[0].name : "Unknown",
-        basePrice: Number(item.basePrice),
-        sizeLabel: item.sizeLabel || "",
-        isCustomizable: item.isCustomizable,
-        isPreorderOnly: item.isPreorderOnly,
-        isActive: item.isActive,
-      });
-    }
-
-    return enriched;
+    return result.map((item) => ({
+      id: item.id.toString(),
+      slug: item.slug,
+      name: item.name,
+      category: item.categoryName || "Unknown",
+      basePrice: Number(item.basePrice),
+      sizeLabel: item.sizeLabel || "",
+      isCustomizable: item.isCustomizable,
+      isPreorderOnly: item.isPreorderOnly,
+      isActive: item.isActive,
+    }));
   } catch (error) {
     console.error("Error fetching admin products:", error);
     return [];

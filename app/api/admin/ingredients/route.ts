@@ -3,18 +3,9 @@ import { getAdminIngredients } from "@/lib/data/admin";
 import { db } from "@/lib/db";
 import { ingredients, measurementUnits } from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { verifyAdminToken } from "@/lib/auth/middleware";
+import { withAdminAuth } from "@/lib/auth/middleware";
 
-export async function GET(request: NextRequest) {
-  // Verify JWT token
-  const adminToken = verifyAdminToken(request);
-  if (!adminToken) {
-    return NextResponse.json(
-      { success: false, message: "Unauthorized" },
-      { status: 401 }
-    );
-  }
-
+const getHandler = async (request: NextRequest) => {
   try {
     const ingredientList = await getAdminIngredients();
     return NextResponse.json(
@@ -28,18 +19,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
 
-export async function POST(request: NextRequest) {
-  // Verify JWT token
-  const adminToken = verifyAdminToken(request);
-  if (!adminToken) {
-    return NextResponse.json(
-      { success: false, message: "Unauthorized" },
-      { status: 401 }
-    );
-  }
-
+const postHandler = async (request: NextRequest) => {
   try {
     const body = await request.json();
     const { sku, name, reorderLevelBaseQty } = body;
@@ -95,4 +77,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+export const GET = withAdminAuth(getHandler);
+export const POST = withAdminAuth(postHandler);

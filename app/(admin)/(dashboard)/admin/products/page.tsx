@@ -11,18 +11,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Toast from "@/features/admin/components/dashboard/toast";
 
 export default function ProductsPage() {
-  // Data hooks
   const { ingredients: _, products: apiProducts, categories, isLoading } = useAdminData();
   const { products, setProducts, productSearch, setProductSearch } = useAdminState([], apiProducts);
   const { filteredProducts, stats } = useAdminFilters([], products, "", productSearch);
   const { toast, showToast } = useToast();
   const { productForm, handleProductFormChange, handleAddProduct, handleToggleProductActive } = useAdminForms(categories.length > 0 ? categories[0].name : "Special");
 
-  // Local state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<AdminProduct | null>(null);
 
-  // Event handlers
   const onAddProduct = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
