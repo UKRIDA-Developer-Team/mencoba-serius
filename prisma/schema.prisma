@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Item {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  category    String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  recipe      Recipe?
+  orderItems  OrderItem[]
+}
+
+model Recipe {
+  id          Int                @id @default(autoincrement())
+  itemId      Int                @unique
+  item        Item               @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  description String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  ingredients RecipeIngredient[]
+}
+
+model Ingredient {
+  id                Int                @id @default(autoincrement())
+  name              String
+  unit              String
+  currentStock      Float              @default(0)
+  minStock          Float              @default(0)
+  pricePerUnit      Float              @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  recipeIngredients RecipeIngredient[]
+  stockOpnames      StockOpname[]
+}
+
+model RecipeIngredient {
+  id           Int        @id @default(autoincrement())
+  recipeId     Int
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredientId Int
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  quantity     Float
+  unit         String
+}
+
+model StockOpname {
+  id            Int        @id @default(autoincrement())
+  ingredientId  Int
+  ingredient    Ingredient @relation(fields: [ingredientId], references: [id])
+  systemStock   Float
+  physicalCount Float
+  difference    Float
+  notes         String?
+  date          DateTime   @default(now())
+  createdAt     DateTime   @default(now())
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  orderNumber String      @unique
+  status      String      @default("PENDING")
+  total       Float       @default(0)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id       Int   @id @default(autoincrement())
+  orderId  Int
+  order    Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemId   Int
+  item     Item  @relation(fields: [itemId], references: [id])
+  quantity Int
+  price    Float
+}
