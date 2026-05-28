@@ -1,4 +1,4 @@
-import { LayoutDashboard, ShoppingBag, ShoppingCart, Warehouse } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, ShoppingCart, PackageOpen, ScrollText, Inbox, BookCopy, Carrot } from "lucide-react";
 import { ADMIN_ROUTES } from "@/features/admin/constants/routes";
 import type { SidebarItem } from "@/features/admin/types/navigation";
 
@@ -34,6 +34,7 @@ export const ADMIN_SIDEBAR_CONFIG: SidebarItem[] = [
         type: "link",
         id: "products-item",
         label: "Item",
+        icon: Inbox,
         href: ADMIN_ROUTES.productsItem,
         activeMatch: "exact",
       },
@@ -41,6 +42,7 @@ export const ADMIN_SIDEBAR_CONFIG: SidebarItem[] = [
         type: "link",
         id: "products-recipe",
         label: "Recipe",
+        icon: ScrollText,
         href: ADMIN_ROUTES.productsRecipe,
       },
     ],
@@ -49,19 +51,21 @@ export const ADMIN_SIDEBAR_CONFIG: SidebarItem[] = [
     type: "group",
     id: "inventory",
     label: "Inventory",
-    icon: Warehouse,
+    icon: PackageOpen,
     defaultOpen: true,
     children: [
       {
         type: "link",
         id: "inventory-ingredients",
         label: "Ingredients",
+        icon: Carrot,
         href: ADMIN_ROUTES.inventoryIngredients,
       },
       {
         type: "link",
         id: "inventory-stock-opname",
         label: "Stock Opname",
+        icon: BookCopy,
         href: ADMIN_ROUTES.inventoryStockOpname,
       },
     ],

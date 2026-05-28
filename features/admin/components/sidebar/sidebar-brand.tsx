@@ -27,7 +27,7 @@ export function SidebarBrand({ isCollapsed, isMobile, onToggleCollapsed }: Sideb
                 >
                     <div className="flex size-8 items-center justify-center text-primary-foreground shrink-0 overflow-hidden">
                         <Image
-                            src="/favicon.png"
+                            src="/Chef-on-Pointe.webp"
                             alt="Chef on Pointe"
                             width={32}
                             height={32}

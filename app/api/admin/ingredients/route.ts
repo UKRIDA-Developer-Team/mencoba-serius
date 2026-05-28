@@ -50,6 +50,7 @@ const postHandler = async (request: NextRequest) => {
         sku: sku.toUpperCase(),
         name,
         baseUnitId,
+        preferredSupplierId: BigInt(1),
         reorderLevelBaseQty: reorderValue.toString(),
         isActive: true,
       })

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ShoppingCart, Home, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Logo from "@/public/favicon.png";
+import Logo from "@/public/Chef-on-Pointe.webp";
 
 const navLinks = [
     { label: "Home", href: "/", icon: Home },
