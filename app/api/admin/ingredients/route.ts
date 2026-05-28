@@ -5,13 +5,10 @@ import { ingredients, measurementUnits } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { withAdminAuth } from "@/lib/auth/middleware";
 
-const getHandler = async (request: NextRequest) => {
+const getHandler = async () => {
   try {
     const ingredientList = await getAdminIngredients();
-    return NextResponse.json(
-      { success: true, data: ingredientList },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, data: ingredientList }, { status: 200 });
   } catch (error) {
     console.error("Error fetching admin ingredients:", error);
     return NextResponse.json(
@@ -33,7 +30,6 @@ const postHandler = async (request: NextRequest) => {
       );
     }
 
-    // Get base unit (g) for default
     const baseUnit = await db
       .select({ id: measurementUnits.id })
       .from(measurementUnits)
@@ -45,10 +41,10 @@ const postHandler = async (request: NextRequest) => {
     const result = await db
       .insert(ingredients)
       .values({
-        sku: sku.toUpperCase(),
-        name,
+        sku: String(sku).toUpperCase(),
+        name: String(name),
         baseUnitId,
-        reorderLevelBaseQty: reorderLevelBaseQty.toString(),
+        reorderLevelBaseQty: Number(reorderLevelBaseQty).toString(),
         isActive: true,
       })
       .returning();
@@ -79,5 +75,144 @@ const postHandler = async (request: NextRequest) => {
   }
 };
 
+const putHandler = async (request: NextRequest) => {
+  try {
+    const body = await request.json();
+    const { id, sku, name, reorderLevelBaseQty } = body;
+
+    if (!id || !sku || !name || reorderLevelBaseQty === undefined) {
+      return NextResponse.json(
+        { success: false, message: "Field wajib: id, sku, name, reorderLevelBaseQty" },
+        { status: 400 }
+      );
+    }
+
+    const result = await db
+      .update(ingredients)
+      .set({
+        sku: String(sku).toUpperCase(),
+        name: String(name),
+        reorderLevelBaseQty: Number(reorderLevelBaseQty).toString(),
+        updatedAt: new Date(),
+      })
+      .where(eq(ingredients.id, BigInt(id)))
+      .returning();
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Ingredient tidak ditemukan" },
+        { status: 404 }
+      );
+    }
+
+    const latest = await getAdminIngredients();
+    const updated = latest.find((item) => item.id === String(id));
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Ingredient berhasil diperbarui",
+        data: updated ?? null,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error updating ingredient:", error);
+    return NextResponse.json(
+      { success: false, message: "Gagal memperbarui ingredient" },
+      { status: 500 }
+    );
+  }
+};
+
+const patchHandler = async (request: NextRequest) => {
+  try {
+    const body = await request.json();
+    const { id, isActive } = body;
+
+    if (!id || typeof isActive !== "boolean") {
+      return NextResponse.json(
+        { success: false, message: "Field wajib: id, isActive" },
+        { status: 400 }
+      );
+    }
+
+    const result = await db
+      .update(ingredients)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(ingredients.id, BigInt(id)))
+      .returning();
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Ingredient tidak ditemukan" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Status ingredient berhasil diperbarui",
+        data: { id: result[0].id.toString(), isActive: result[0].isActive },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error toggling ingredient status:", error);
+    return NextResponse.json(
+      { success: false, message: "Gagal memperbarui status ingredient" },
+      { status: 500 }
+    );
+  }
+};
+
+const deleteHandler = async (request: NextRequest) => {
+  try {
+    const body = await request.json();
+    const { id } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: "Field id wajib diisi" },
+        { status: 400 }
+      );
+    }
+
+    const result = await db
+      .delete(ingredients)
+      .where(eq(ingredients.id, BigInt(id)))
+      .returning();
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Ingredient tidak ditemukan" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Ingredient berhasil dihapus",
+        data: {
+          id: result[0].id.toString(),
+          sku: result[0].sku,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting ingredient:", error);
+    return NextResponse.json(
+      { success: false, message: "Gagal menghapus ingredient" },
+      { status: 500 }
+    );
+  }
+};
+
 export const GET = withAdminAuth(getHandler);
 export const POST = withAdminAuth(postHandler);
+export const PUT = withAdminAuth(putHandler);
+export const PATCH = withAdminAuth(patchHandler);
+export const DELETE = withAdminAuth(deleteHandler);
