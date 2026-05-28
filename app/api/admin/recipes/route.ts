@@ -50,18 +50,18 @@ const getHandler = async () => {
         .orderBy(ingredients.name),
     ]);
 
-    const ingredientMap = new Map<
+    const ingredientsById = new Map<
       string,
       { id: string; name: string; units: Array<{ unitId: string; unitCode: string }> }
     >();
 
     ingredientOptions.forEach((row) => {
       const key = row.id.toString();
-      if (!ingredientMap.has(key)) {
-        ingredientMap.set(key, { id: key, name: row.name, units: [] });
+      if (!ingredientsById.has(key)) {
+        ingredientsById.set(key, { id: key, name: row.name, units: [] });
       }
       if (row.unitId && row.unitCode) {
-        ingredientMap.get(key)?.units.push({
+        ingredientsById.get(key)?.units.push({
           unitId: row.unitId.toString(),
           unitCode: row.unitCode,
         });
@@ -88,7 +88,7 @@ const getHandler = async () => {
             id: product.id.toString(),
             name: product.name,
           })),
-          ingredients: Array.from(ingredientMap.values()),
+          ingredients: Array.from(ingredientsById.values()),
         },
       },
       { status: 200 }

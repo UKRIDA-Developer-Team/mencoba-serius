@@ -24,7 +24,8 @@ const generateOrderNumber = () => {
     .getMinutes()
     .toString()
     .padStart(2, "0")}${now.getSeconds().toString().padStart(2, "0")}`;
-  return `SO-${date}-${time}`;
+  const randomSuffix = Math.floor(Math.random() * 9000 + 1000);
+  return `SO-${date}-${time}-${randomSuffix}`;
 };
 
 const getHandler = async () => {

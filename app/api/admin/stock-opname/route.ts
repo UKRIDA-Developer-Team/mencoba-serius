@@ -41,14 +41,14 @@ const getHandler = async () => {
         .orderBy(ingredientUnitMap.ingredientId),
     ]);
 
-    const unitsByIngredient = new Map<string, Array<{ unitId: string; unitCode: string }>>();
+    const unitsByIngredientId = new Map<string, Array<{ unitId: string; unitCode: string }>>();
     ingredientUnits.forEach((unit) => {
       const key = unit.ingredientId.toString();
-      if (!unitsByIngredient.has(key)) {
-        unitsByIngredient.set(key, []);
+      if (!unitsByIngredientId.has(key)) {
+        unitsByIngredientId.set(key, []);
       }
       if (unit.unitCode) {
-        unitsByIngredient.get(key)?.push({
+        unitsByIngredientId.get(key)?.push({
           unitId: unit.unitId.toString(),
           unitCode: unit.unitCode,
         });
@@ -74,7 +74,7 @@ const getHandler = async () => {
             name: ingredient.name,
             stock: ingredient.currentStockBaseQty,
             baseUnitCode: ingredient.baseUnitCode,
-            units: unitsByIngredient.get(ingredient.id) ?? [],
+            units: unitsByIngredientId.get(ingredient.id) ?? [],
           })),
         },
       },
