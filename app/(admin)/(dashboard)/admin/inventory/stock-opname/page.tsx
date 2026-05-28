@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { authenticatedFetch } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +38,7 @@ export default function StockOpnamePage() {
     setTimeout(() => setToast(""), 2500);
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await authenticatedFetch("/api/admin/stock-opname");
@@ -46,26 +46,28 @@ export default function StockOpnamePage() {
       if (response.ok && payload.success) {
         setRecords(payload.data);
         setIngredients(payload.options.ingredients);
-
-        if (!form.ingredientId && payload.options.ingredients.length > 0) {
+        setForm((prev) => {
+          if (prev.ingredientId || payload.options.ingredients.length === 0) {
+            return prev;
+          }
           const firstIngredient = payload.options.ingredients[0] as IngredientOption;
-          setForm((prev) => ({
+          return {
             ...prev,
             ingredientId: firstIngredient.id,
             unitId: firstIngredient.units[0]?.unitId ?? "",
-          }));
-        }
+          };
+        });
       }
     } catch {
       showToast("Gagal memuat data stock opname");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const selectedIngredient = useMemo(
     () => ingredients.find((item) => item.id === form.ingredientId),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { authenticatedFetch } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +32,7 @@ export default function InventoryIngredientsPage() {
     setTimeout(() => setToast(""), 2500);
   };
 
-  const loadIngredients = async () => {
+  const loadIngredients = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await authenticatedFetch("/api/admin/ingredients");
@@ -45,11 +45,11 @@ export default function InventoryIngredientsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadIngredients();
-  }, []);
+  }, [loadIngredients]);
 
   const filteredIngredients = useMemo(() => {
     if (!search.trim()) return ingredients;

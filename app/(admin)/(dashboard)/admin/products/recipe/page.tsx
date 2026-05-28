@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { authenticatedFetch } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +44,7 @@ export default function ProductRecipePage() {
     setTimeout(() => setToast(""), 2500);
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await authenticatedFetch("/api/admin/recipes");
@@ -52,21 +52,22 @@ export default function ProductRecipePage() {
       if (response.ok && payload.success) {
         setRecipes(payload.data);
         setOptions(payload.options);
-
-        if (!form.productId && payload.options.products.length > 0) {
-          setForm((prev) => ({ ...prev, productId: payload.options.products[0].id }));
-        }
+        setForm((prev) =>
+          !prev.productId && payload.options.products.length > 0
+            ? { ...prev, productId: payload.options.products[0].id }
+            : prev
+        );
       }
     } catch {
       showToast("Gagal memuat recipe");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const selectedIngredientUnits = useMemo(() => {
     return options.ingredients.find((item) => item.id === form.ingredientId)?.units ?? [];
