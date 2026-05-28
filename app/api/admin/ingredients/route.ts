@@ -22,10 +22,16 @@ const postHandler = async (request: NextRequest) => {
   try {
     const body = await request.json();
     const { sku, name, reorderLevelBaseQty } = body;
+    const reorderValue = Number(reorderLevelBaseQty);
 
-    if (!sku || !name || reorderLevelBaseQty === undefined) {
+    if (
+      typeof sku !== "string" ||
+      typeof name !== "string" ||
+      !Number.isFinite(reorderValue) ||
+      reorderValue < 0
+    ) {
       return NextResponse.json(
-        { success: false, message: "SKU, name, dan reorder level wajib diisi" },
+        { success: false, message: "SKU, name, dan reorder level valid wajib diisi" },
         { status: 400 }
       );
     }
@@ -41,10 +47,10 @@ const postHandler = async (request: NextRequest) => {
     const result = await db
       .insert(ingredients)
       .values({
-        sku: String(sku).toUpperCase(),
-        name: String(name),
+        sku: sku.toUpperCase(),
+        name,
         baseUnitId,
-        reorderLevelBaseQty: Number(reorderLevelBaseQty).toString(),
+        reorderLevelBaseQty: reorderValue.toString(),
         isActive: true,
       })
       .returning();
@@ -79,8 +85,15 @@ const putHandler = async (request: NextRequest) => {
   try {
     const body = await request.json();
     const { id, sku, name, reorderLevelBaseQty } = body;
+    const reorderValue = Number(reorderLevelBaseQty);
 
-    if (!id || !sku || !name || reorderLevelBaseQty === undefined) {
+    if (
+      !id ||
+      typeof sku !== "string" ||
+      typeof name !== "string" ||
+      !Number.isFinite(reorderValue) ||
+      reorderValue < 0
+    ) {
       return NextResponse.json(
         { success: false, message: "Field wajib: id, sku, name, reorderLevelBaseQty" },
         { status: 400 }
@@ -90,9 +103,9 @@ const putHandler = async (request: NextRequest) => {
     const result = await db
       .update(ingredients)
       .set({
-        sku: String(sku).toUpperCase(),
-        name: String(name),
-        reorderLevelBaseQty: Number(reorderLevelBaseQty).toString(),
+        sku: sku.toUpperCase(),
+        name,
+        reorderLevelBaseQty: reorderValue.toString(),
         updatedAt: new Date(),
       })
       .where(eq(ingredients.id, BigInt(id)))

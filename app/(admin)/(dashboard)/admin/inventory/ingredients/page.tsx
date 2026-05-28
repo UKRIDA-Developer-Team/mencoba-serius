@@ -270,7 +270,7 @@ export default function InventoryIngredientsPage() {
                       <>
                         <p className="text-sm font-medium">{ingredient.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {ingredient.sku} · Stock {ingredient.currentStockBaseQty} {ingredient.baseUnitCode} · Reorder {ingredient.reorderLevelBaseQty} {ingredient.baseUnitCode}
+                          SKU {ingredient.sku}, Stock {ingredient.currentStockBaseQty} {ingredient.baseUnitCode}, Reorder {ingredient.reorderLevelBaseQty} {ingredient.baseUnitCode}
                         </p>
                       </>
                     )}

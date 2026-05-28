@@ -84,7 +84,7 @@ export default function OrdersPage() {
   const handleCreateOrder = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const totalAmount = Number(form.totalAmount || 0);
-    if (!Number.isFinite(totalAmount) || totalAmount < 0) {
+    if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
       showToast("Total order tidak valid");
       return;
     }
@@ -170,7 +170,7 @@ export default function OrdersPage() {
               <label className="text-sm font-medium">Total (Rp)</label>
               <Input
                 type="number"
-                min={0}
+                min={1}
                 value={form.totalAmount}
                 onChange={(event) => setForm((prev) => ({ ...prev, totalAmount: event.target.value }))}
                 required

@@ -255,7 +255,7 @@ export default function ProductRecipePage() {
                   <div>
                     <p className="text-sm font-medium">{recipe.productName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {recipe.ingredientName} · {recipe.quantityPerProduct} {recipe.unitCode} · Wastage {recipe.wastagePercent}%
+                      {recipe.ingredientName}, {recipe.quantityPerProduct} {recipe.unitCode}, Wastage {recipe.wastagePercent}%
                     </p>
                     {recipe.notes ? <p className="text-xs text-muted-foreground mt-1">{recipe.notes}</p> : null}
                   </div>

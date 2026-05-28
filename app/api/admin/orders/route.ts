@@ -92,11 +92,21 @@ const postHandler = async (request: NextRequest) => {
 
     let customerId: bigint | null = null;
     if (customerName.length > 0) {
-      const insertedCustomer = await db
-        .insert(customers)
-        .values({ fullName: customerName })
-        .returning({ id: customers.id, fullName: customers.fullName });
-      customerId = insertedCustomer[0].id;
+      const existingCustomer = await db
+        .select({ id: customers.id })
+        .from(customers)
+        .where(eq(customers.fullName, customerName))
+        .limit(1);
+
+      if (existingCustomer.length > 0) {
+        customerId = existingCustomer[0].id;
+      } else {
+        const insertedCustomer = await db
+          .insert(customers)
+          .values({ fullName: customerName })
+          .returning({ id: customers.id });
+        customerId = insertedCustomer[0].id;
+      }
     }
 
     const result = await db
