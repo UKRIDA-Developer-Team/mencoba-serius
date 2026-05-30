@@ -90,7 +90,7 @@ export default function AdminSidebarNav({
                     <details
                         key={item.id}
                         open={item.defaultOpen || hasActiveChild}
-                        className="group border border-transparent open:border-border/60 rounded-lg"
+                        className="group open:border-border/60 rounded-lg"
                     >
                         <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 text-sm text-foreground/75 hover:bg-muted rounded-lg">
                             <span className="flex items-center gap-3">
