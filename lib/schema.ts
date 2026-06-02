@@ -138,6 +138,23 @@ export const products = pgTable("products", {
   }),
 }));
 
+export const productVariants = pgTable("product_variants", {
+  id: bigserial("id", { mode: "bigint" }).primaryKey(),
+  productId: bigserial("product_id", { mode: "bigint" }).notNull(),
+  label: text("label").notNull(),
+  priceOverride: numeric("price_override", { precision: 12, scale: 2 }),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+}, (table) => ({
+  productFk: foreignKey({
+    columns: [table.productId],
+    foreignColumns: [products.id],
+  }).onDelete("cascade"),
+}));
+
 export const ingredients = pgTable("ingredients", {
   id: bigserial("id", { mode: "bigint" }).primaryKey(),
   sku: text("sku").notNull().unique(),

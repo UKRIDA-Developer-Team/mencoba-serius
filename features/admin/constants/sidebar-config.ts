@@ -1,4 +1,4 @@
-import { LayoutDashboard, ShoppingBag, ShoppingCart, PackageOpen, ScrollText, Inbox, BookCopy, Carrot } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, ShoppingCart, PackageOpen, BookCopy, Carrot } from "lucide-react";
 import { ADMIN_ROUTES } from "@/features/admin/constants/routes";
 import type { SidebarItem } from "@/features/admin/types/navigation";
 
@@ -24,28 +24,12 @@ export const ADMIN_SIDEBAR_CONFIG: SidebarItem[] = [
     href: ADMIN_ROUTES.orders,
   },
   {
-    type: "group",
+    type: "link",
     id: "products",
     label: "Products",
     icon: ShoppingBag,
-    defaultOpen: true,
-    children: [
-      {
-        type: "link",
-        id: "products-item",
-        label: "Item",
-        icon: Inbox,
-        href: ADMIN_ROUTES.productsItem,
-        activeMatch: "exact",
-      },
-      {
-        type: "link",
-        id: "products-recipe",
-        label: "Recipe",
-        icon: ScrollText,
-        href: ADMIN_ROUTES.productsRecipe,
-      },
-    ],
+    href: ADMIN_ROUTES.productsItem,
+    activeMatch: "prefix",
   },
   {
     type: "group",

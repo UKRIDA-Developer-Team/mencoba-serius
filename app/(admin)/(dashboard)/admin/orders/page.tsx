@@ -1,53 +1,74 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { authenticatedFetch } from "@/lib/auth/client";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Search, ShoppingCart } from "lucide-react";
 import Toast from "@/features/admin/components/dashboard/toast";
 
-type OrderType = "WALK_IN" | "PRE_ORDER" | "CUSTOM_CAKE";
-type OrderStatus =
-  | "DRAFT"
-  | "CONFIRMED"
-  | "IN_PRODUCTION"
-  | "READY"
-  | "COMPLETED"
-  | "CANCELLED";
+type OrderStatus = "DRAFT" | "CONFIRMED" | "IN_PRODUCTION" | "READY" | "COMPLETED" | "CANCELLED";
 
 type OrderItem = {
   id: string;
   orderNumber: string;
   customerName: string;
-  orderType: OrderType;
+  orderType: string;
   status: OrderStatus;
   totalAmount: number;
   orderedAt: string;
 };
 
-const ORDER_TYPES: OrderType[] = ["WALK_IN", "PRE_ORDER", "CUSTOM_CAKE"];
-const ORDER_STATUSES: OrderStatus[] = [
-  "DRAFT",
-  "CONFIRMED",
-  "IN_PRODUCTION",
-  "READY",
-  "COMPLETED",
-  "CANCELLED",
-];
+const ORDER_STATUSES: OrderStatus[] = ["DRAFT", "CONFIRMED", "IN_PRODUCTION", "READY", "COMPLETED", "CANCELLED"];
+
+const STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
+  CONFIRMED: "Dikonfirmasi",
+  IN_PRODUCTION: "Produksi",
+  READY: "Siap",
+  COMPLETED: "Selesai",
+  CANCELLED: "Dibatalkan",
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  WALK_IN: "Walk In",
+  PRE_ORDER: "Pre-Order",
+  CUSTOM_CAKE: "Custom",
+};
+
+const STATUS_STYLES: Record<string, string> = {
+  DRAFT: "bg-[#B0A499]/15 text-[#B0A499]",
+  CONFIRMED: "bg-[#8899C4]/15 text-[#8899C4]",
+  IN_PRODUCTION: "bg-[#D4935A]/15 text-[#D4935A]",
+  READY: "bg-[#7BAE8F]/15 text-[#7BAE8F]",
+  COMPLETED: "bg-primary/10 text-primary",
+  CANCELLED: "bg-destructive/10 text-destructive",
+};
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLES[status] || "bg-muted text-muted-foreground"}`}>
+      {STATUS_LABELS[status] || status}
+    </span>
+  );
+}
+
+function formatIDR(value: number) {
+  return `Rp\u00a0${value.toLocaleString("id-ID")}`;
+}
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
-  const [form, setForm] = useState({
-    customerName: "",
-    orderType: "WALK_IN" as OrderType,
-    totalAmount: "",
-  });
 
-  const loadOrders = async () => {
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(""), 2500);
+  };
+
+  const loadOrders = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await authenticatedFetch("/api/admin/orders");
@@ -56,15 +77,15 @@ export default function OrdersPage() {
         setOrders(payload.data);
       }
     } catch {
-      setToast("Gagal memuat order");
+      showToast("Gagal memuat order");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadOrders();
-  }, []);
+  }, [loadOrders]);
 
   const filteredOrders = useMemo(() => {
     if (!search.trim()) return orders;
@@ -75,41 +96,6 @@ export default function OrdersPage() {
         item.customerName.toLowerCase().includes(q)
     );
   }, [orders, search]);
-
-  const showToast = (message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(""), 2500);
-  };
-
-  const handleCreateOrder = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const totalAmount = Number(form.totalAmount || 0);
-    if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
-      showToast("Total order tidak valid");
-      return;
-    }
-
-    try {
-      const response = await authenticatedFetch("/api/admin/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerName: form.customerName,
-          orderType: form.orderType,
-          totalAmount,
-        }),
-      });
-
-      const payload = await response.json();
-      if (!response.ok || !payload.success) throw new Error();
-
-      setOrders((prev) => [payload.data, ...prev]);
-      setForm({ customerName: "", orderType: "WALK_IN", totalAmount: "" });
-      showToast("Order berhasil dibuat");
-    } catch {
-      showToast("Gagal membuat order");
-    }
-  };
 
   const handleStatusChange = async (id: string, status: OrderStatus) => {
     try {
@@ -129,99 +115,102 @@ export default function OrdersPage() {
     }
   };
 
+  // Stats
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    orders.forEach((o) => { counts[o.status] = (counts[o.status] || 0) + 1; });
+    return counts;
+  }, [orders]);
+
   return (
-    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-12 pb-8 space-y-6">
+    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-12 space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-semibold text-primary">Manajemen Order</h1>
-        <p className="text-sm text-foreground/70 mt-1">Kelola pesanan masuk dan update status produksi.</p>
+        <h1 className="text-2xl sm:text-3xl font-semibold text-primary">Manajemen Order</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Kelola pesanan masuk dan update status produksi.
+        </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tambah Order</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreateOrder} className="grid md:grid-cols-4 gap-3 items-end">
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Nama Customer</label>
-              <Input
-                value={form.customerName}
-                onChange={(event) => setForm((prev) => ({ ...prev, customerName: event.target.value }))}
-                placeholder="Guest / Nama customer"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Tipe Order</label>
-              <select
-                className="w-full px-3 py-2 border rounded-md bg-white text-sm"
-                value={form.orderType}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, orderType: event.target.value as OrderType }))
-                }
-              >
-                {ORDER_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Total (Rp)</label>
-              <Input
-                type="number"
-                min={1}
-                value={form.totalAmount}
-                onChange={(event) => setForm((prev) => ({ ...prev, totalAmount: event.target.value }))}
-                required
-              />
-            </div>
-            <Button type="submit">Simpan Order</Button>
-          </form>
-        </CardContent>
-      </Card>
+      {/* Quick Status Chips */}
+      <div className="flex flex-wrap gap-2">
+        {ORDER_STATUSES.map((s) => (
+          <div key={s} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${STATUS_STYLES[s]}`}>
+            <span className="tabular-nums">{statusCounts[s] || 0}</span>
+            <span>{STATUS_LABELS[s]}</span>
+          </div>
+        ))}
+      </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-3">
-            <CardTitle>Daftar Order</CardTitle>
-            <Input
-              className="w-52"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Cari nomor/customer"
-            />
+      {/* Order List */}
+      <Card className="border-border rounded-xl">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="text-lg">Daftar Order</CardTitle>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari nomor / customer..."
+                className="pl-9 bg-card border-border rounded-lg"
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            <div className="flex items-center justify-center h-40">
+              <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                <div className="size-6 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+                <p className="text-sm">Memuat...</p>
+              </div>
+            </div>
           ) : filteredOrders.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Belum ada order.</p>
+            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+              <ShoppingCart className="size-10 opacity-30 mb-2" />
+              <p className="text-sm">Belum ada order.</p>
+            </div>
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y divide-border">
               {filteredOrders.map((order) => (
-                <div key={order.id} className="p-3 border rounded-lg grid md:grid-cols-5 gap-3 items-center">
-                  <div>
-                    <p className="text-sm font-medium">{order.orderNumber}</p>
-                    <p className="text-xs text-muted-foreground">{order.customerName}</p>
+                <div key={order.id} className="py-3 first:pt-0 last:pb-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                    {/* Order info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="text-sm font-semibold text-primary font-mono">{order.orderNumber}</p>
+                        <StatusBadge status={order.status} />
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>{order.customerName}</span>
+                        <span className="px-1.5 py-0.5 rounded bg-muted text-xs">
+                          {TYPE_LABELS[order.orderType] || order.orderType}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Amount + Date */}
+                    <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+                      <div className="text-right">
+                        <p className="text-sm font-semibold tabular-nums">{formatIDR(order.totalAmount)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(order.orderedAt).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+                        </p>
+                      </div>
+
+                      {/* Status Changer */}
+                      <select
+                        className="bg-card border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors min-w-[120px]"
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
+                      >
+                        {ORDER_STATUSES.map((s) => (
+                          <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <p className="text-sm">{order.orderType}</p>
-                  <p className="text-sm">Rp {order.totalAmount.toLocaleString("id-ID")}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(order.orderedAt).toLocaleString("id-ID")}
-                  </p>
-                  <select
-                    className="w-full px-2 py-1 border rounded-md text-sm bg-white"
-                    value={order.status}
-                    onChange={(event) => handleStatusChange(order.id, event.target.value as OrderStatus)}
-                  >
-                    {ORDER_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               ))}
             </div>

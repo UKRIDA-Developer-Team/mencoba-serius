@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Toast from "@/features/admin/components/dashboard/toast";
+import { Search, Plus, Edit3, Check, X, Trash2, Package } from "lucide-react";
 
 type Ingredient = {
   id: string;
@@ -17,6 +18,20 @@ type Ingredient = {
   preferredSupplier: string;
   isActive: boolean;
 };
+
+function StockIndicator({ current, reorder }: { current: number; reorder: number }) {
+  const ratio = reorder > 0 ? Math.min(current / reorder, 2) : (current > 0 ? 2 : 0);
+  const pct = Math.min(ratio * 50, 100);
+  const color = ratio < 0.5 ? "bg-destructive" : ratio < 1 ? "bg-[#D4935A]" : "bg-[#7BAE8F]";
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-16 h-1.5 rounded-full bg-border overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
 
 export default function InventoryIngredientsPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -172,137 +187,199 @@ export default function InventoryIngredientsPage() {
     }
   };
 
+  const lowCount = useMemo(
+    () => ingredients.filter((i) => i.currentStockBaseQty < i.reorderLevelBaseQty).length,
+    [ingredients]
+  );
+
   return (
-    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-12 pb-8 space-y-6">
+    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-12 space-y-6">
       <div>
-        <h1 className="text-3xl font-semibold text-primary">Manajemen Ingredients</h1>
-        <p className="text-sm text-foreground/70 mt-1">Kelola data bahan baku untuk inventory.</p>
+        <h1 className="text-2xl sm:text-3xl font-semibold text-primary">Manajemen Ingredients</h1>
+        <p className="text-sm text-muted-foreground mt-1">Kelola data bahan baku untuk inventory.</p>
       </div>
 
-      <Card>
+      {/* Quick Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="rounded-xl border border-border bg-card p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total</p>
+          <p className="text-2xl font-bold mt-1 tabular-nums">{ingredients.length}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aktif</p>
+          <p className="text-2xl font-bold mt-1 tabular-nums">{ingredients.filter((i) => i.isActive).length}</p>
+        </div>
+        <div className={`rounded-xl border p-4 ${lowCount > 0 ? "border-destructive/30 bg-destructive/5" : "border-border bg-card"}`}>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Low Stock</p>
+          <p className={`text-2xl font-bold mt-1 tabular-nums ${lowCount > 0 ? "text-destructive" : ""}`}>{lowCount}</p>
+        </div>
+      </div>
+
+      {/* Add Form */}
+      <Card className="rounded-xl border-border">
         <CardHeader>
-          <CardTitle>Tambah Ingredient</CardTitle>
+          <CardTitle className="text-base">Tambah Ingredient</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAdd} className="grid md:grid-cols-4 gap-3 items-end">
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Nama</label>
+          <form onSubmit={handleAdd} className="grid sm:grid-cols-4 gap-3 items-end">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Nama</label>
               <Input
                 value={form.name}
-                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                className="bg-card border-border rounded-lg"
                 required
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">SKU</label>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">SKU</label>
               <Input
                 value={form.sku}
-                onChange={(event) => setForm((prev) => ({ ...prev, sku: event.target.value }))}
+                onChange={(e) => setForm((p) => ({ ...p, sku: e.target.value }))}
+                className="bg-card border-border rounded-lg font-mono"
                 required
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Reorder Level</label>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Reorder Level</label>
               <Input
                 type="number"
                 min={0}
                 value={form.reorder}
-                onChange={(event) => setForm((prev) => ({ ...prev, reorder: event.target.value }))}
+                onChange={(e) => setForm((p) => ({ ...p, reorder: e.target.value }))}
+                className="bg-card border-border rounded-lg"
                 required
               />
             </div>
-            <Button type="submit">Tambah</Button>
+            <Button type="submit" className="gap-1">
+              <Plus className="size-4" /> Tambah
+            </Button>
           </form>
         </CardContent>
       </Card>
 
-      <Card>
+      {/* Ingredients List */}
+      <Card className="rounded-xl border-border">
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
-            <CardTitle>Daftar Ingredients</CardTitle>
-            <Input
-              className="w-56"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Cari ingredient"
-            />
+            <CardTitle className="text-base">
+              Daftar Ingredients
+              <span className="ml-2 text-sm font-normal text-muted-foreground">{filteredIngredients.length} item</span>
+            </CardTitle>
+            <div className="relative w-full sm:w-56">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari ingredient..."
+                className="pl-9 bg-card border-border rounded-lg"
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            <div className="flex items-center justify-center h-32">
+              <div className="size-6 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+            </div>
           ) : filteredIngredients.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Belum ada ingredient.</p>
+            <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+              <Package className="size-10 opacity-30 mb-2" />
+              <p className="text-sm">Belum ada ingredient.</p>
+            </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
+              {/* Table Header */}
+              <div className="grid grid-cols-[1fr_100px_120px_80px_auto] gap-3 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/40 rounded-lg">
+                <span>Ingredient</span>
+                <span>Stok</span>
+                <span>Supplier</span>
+                <span>Level</span>
+                <span className="text-right">Aksi</span>
+              </div>
+
               {filteredIngredients.map((ingredient) => (
                 <div
                   key={ingredient.id}
-                  className={`p-3 border rounded-lg flex items-start justify-between gap-3 ${
-                    ingredient.isActive ? "bg-white" : "bg-muted/40"
+                  className={`grid grid-cols-[1fr_100px_120px_80px_auto] gap-3 items-center px-4 py-2.5 rounded-lg border transition-colors ${
+                    ingredient.isActive ? "border-border bg-card" : "border-border/50 bg-muted/20"
                   }`}
                 >
-                  <div className="flex-1">
+                  {/* Name / Edit */}
+                  <div>
                     {editId === ingredient.id ? (
-                      <div className="grid md:grid-cols-3 gap-2">
-                        <Input
+                      <div className="flex gap-2">
+                        <input
+                          className="bg-card border border-border rounded px-2 py-1 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-accent/40"
                           value={editForm.name}
-                          onChange={(event) =>
-                            setEditForm((prev) => ({ ...prev, name: event.target.value }))
-                          }
+                          onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
                         />
-                        <Input
+                        <input
+                          className="bg-card border border-border rounded px-2 py-1 text-sm w-20 font-mono focus:outline-none focus:ring-1 focus:ring-accent/40"
                           value={editForm.sku}
-                          onChange={(event) =>
-                            setEditForm((prev) => ({ ...prev, sku: event.target.value }))
-                          }
+                          onChange={(e) => setEditForm((p) => ({ ...p, sku: e.target.value }))}
                         />
-                        <Input
+                        <input
                           type="number"
                           min={0}
+                          className="bg-card border border-border rounded px-2 py-1 text-sm w-16 focus:outline-none focus:ring-1 focus:ring-accent/40"
                           value={editForm.reorder}
-                          onChange={(event) =>
-                            setEditForm((prev) => ({ ...prev, reorder: event.target.value }))
-                          }
+                          onChange={(e) => setEditForm((p) => ({ ...p, reorder: e.target.value }))}
                         />
                       </div>
                     ) : (
                       <>
                         <p className="text-sm font-medium">{ingredient.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          SKU {ingredient.sku}, Stock {ingredient.currentStockBaseQty} {ingredient.baseUnitCode}, Reorder {ingredient.reorderLevelBaseQty} {ingredient.baseUnitCode}
-                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">{ingredient.sku}</p>
                       </>
                     )}
                   </div>
 
-                  <div className="flex gap-2">
+                  {/* Stock */}
+                  <div>
+                    <p className="text-sm tabular-nums">
+                      {ingredient.currentStockBaseQty} {ingredient.baseUnitCode}
+                    </p>
+                    <StockIndicator current={ingredient.currentStockBaseQty} reorder={ingredient.reorderLevelBaseQty} />
+                  </div>
+
+                  {/* Supplier */}
+                  <p className="text-xs text-muted-foreground truncate">{ingredient.preferredSupplier || "—"}</p>
+
+                  {/* Reorder */}
+                  <p className="text-xs text-muted-foreground tabular-nums">
+                    {ingredient.reorderLevelBaseQty} {ingredient.baseUnitCode}
+                  </p>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 justify-end">
                     {editId === ingredient.id ? (
                       <>
-                        <Button size="sm" onClick={saveEdit}>Simpan</Button>
-                        <Button size="sm" variant="outline" onClick={cancelEdit}>
-                          Batal
-                        </Button>
+                        <button onClick={saveEdit} className="p-1 text-green-600 hover:text-green-700">
+                          <Check className="size-3.5" />
+                        </button>
+                        <button onClick={cancelEdit} className="p-1 text-muted-foreground hover:text-foreground">
+                          <X className="size-3.5" />
+                        </button>
                       </>
                     ) : (
                       <>
-                        <Button size="sm" variant="outline" onClick={() => startEdit(ingredient)}>
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={ingredient.isActive ? "secondary" : "default"}
+                        <button onClick={() => startEdit(ingredient)} className="p-1 text-muted-foreground hover:text-accent">
+                          <Edit3 className="size-3.5" />
+                        </button>
+                        <button
                           onClick={() => toggleActive(ingredient)}
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                            ingredient.isActive
+                              ? "bg-[#7BAE8F]/15 text-[#7BAE8F]"
+                              : "bg-muted text-muted-foreground"
+                          }`}
                         >
-                          {ingredient.isActive ? "Nonaktif" : "Aktif"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => removeIngredient(ingredient.id)}
-                        >
-                          Hapus
-                        </Button>
+                          {ingredient.isActive ? "Aktif" : "Nonaktif"}
+                        </button>
+                        <button onClick={() => removeIngredient(ingredient.id)} className="p-1 text-muted-foreground hover:text-destructive">
+                          <Trash2 className="size-3.5" />
+                        </button>
                       </>
                     )}
                   </div>

@@ -15,6 +15,13 @@
       "when": 1779720879869,
       "tag": "0001_brainy_hobgoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780371812652,
+      "tag": "0002_flippant_xavin",
+      "breakpoints": true
     }
   ]
 }

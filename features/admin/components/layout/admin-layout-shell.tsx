@@ -11,7 +11,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
     return (
         <main
             className={cn(
-                "pt-14 h-screen overflow-y-auto transition-all duration-300 ease-in-out",
+                "pt-14 min-h-svh transition-all duration-300 ease-in-out",
                 isCollapsed ? "md:pl-16" : "md:pl-56",
                 "w-full"
             )}
@@ -20,6 +20,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
         </main>
     );
 }
+
 
 export default function AdminLayoutShell({ children }: { children: React.ReactNode }) {
     return (
