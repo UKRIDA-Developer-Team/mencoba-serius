@@ -526,7 +526,7 @@ export default function ProductsPage() {
                         ) : (
                           <>
                             <Link
-                              href={`/admin/products/${product.slug}/recipe`}
+                              href={`/admin/products/recipe/${product.slug}`}
                               className="flex items-center gap-1 h-7 px-2 rounded-md text-xs text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
                               title="Kelola resep"
                             >

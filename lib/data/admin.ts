@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { ingredients, products, productCategories, suppliers, measurementUnits, ingredientStockMovements } from "@/lib/schema";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 export type AdminIngredient = {
   id: string;
@@ -44,8 +44,10 @@ async function calculateIngredientStock(ingredientId: bigint, baseUnitId: bigint
       })
       .from(ingredientStockMovements)
       .where(
-        eq(ingredientStockMovements.ingredientId, ingredientId) &&
-        eq(ingredientStockMovements.unitId, baseUnitId)
+        and(
+          eq(ingredientStockMovements.ingredientId, ingredientId),
+          eq(ingredientStockMovements.unitId, baseUnitId)
+        )
       );
 
     let stock = 0;
