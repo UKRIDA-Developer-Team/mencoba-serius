@@ -104,6 +104,7 @@ function fillDailyPointsIfNeeded(
     }));
   }
 
+  // Query groups by truncated day (`bucket`), so each date key is unique.
   const map = new Map(
     rows.map((row) => [
       toDateKey(row.bucket),
@@ -160,6 +161,7 @@ const getHandler = async (request: NextRequest) => {
       ORDER BY ${config.orderExpr}
     `);
 
+    // Keep status distribution aligned with selected date range for donut chart context.
     const statusRows = await db.execute(sql`
       SELECT status, COUNT(*)::int AS count
       FROM sales_orders
