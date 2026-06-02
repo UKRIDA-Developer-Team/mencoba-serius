@@ -5,13 +5,14 @@ import Link from "next/link";
 import { authenticatedFetch } from "@/lib/auth/client";
 import { useAdminData, useAdminFilters, useAdminState } from "@/features/admin/hooks";
 import StatCards from "@/features/admin/components/dashboard/stat-cards";
-import RevenueChart from "@/features/admin/components/dashboard/revenue-chart";
+import RevenueChart, { type DashboardRange } from "@/features/admin/components/dashboard/revenue-chart";
 import OrdersDonut from "@/features/admin/components/dashboard/orders-donut";
 import RecentOrders from "@/features/admin/components/dashboard/recent-orders";
 import { AlertTriangle, ArrowRight, Package, ShoppingBag } from "lucide-react";
 
 type DashboardStats = {
-  revenueLast7Days: { date: string; revenue: number; orderCount: number }[];
+  range: DashboardRange;
+  revenue: { date: string; label?: string; revenue: number; orderCount: number }[];
   ordersByStatus: { status: string; count: number }[];
 };
 
@@ -31,13 +32,14 @@ export default function AdminPage() {
   const { lowStockItems, stats } = useAdminFilters(ingredients, products, "", "");
 
   const [chartStats, setChartStats] = useState<DashboardStats | null>(null);
+  const [chartRange, setChartRange] = useState<DashboardRange>("this_week");
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [isChartLoading, setIsChartLoading] = useState(true);
 
   const loadDashboardStats = useCallback(async () => {
     try {
       const [statsRes, ordersRes] = await Promise.all([
-        authenticatedFetch("/api/admin/dashboard"),
+        authenticatedFetch(`/api/admin/dashboard?range=${chartRange}`),
         authenticatedFetch("/api/admin/orders"),
       ]);
       const statsPayload = await statsRes.json();
@@ -50,9 +52,10 @@ export default function AdminPage() {
     } finally {
       setIsChartLoading(false);
     }
-  }, []);
+  }, [chartRange]);
 
   useEffect(() => {
+    setIsChartLoading(true);
     loadDashboardStats();
   }, [loadDashboardStats]);
 
@@ -88,7 +91,11 @@ export default function AdminPage() {
       {!isChartLoading && chartStats && (
         <div className="grid xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2">
-            <RevenueChart data={chartStats.revenueLast7Days} />
+            <RevenueChart
+              data={chartStats.revenue}
+              range={chartRange}
+              onRangeChange={setChartRange}
+            />
           </div>
           <div>
             <OrdersDonut data={chartStats.ordersByStatus} />

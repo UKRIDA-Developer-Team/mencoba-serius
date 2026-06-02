@@ -10,12 +10,23 @@ import { useId, useMemo, useState } from "react";
 
 type DataPoint = {
     date: string;
+    label?: string;
     revenue: number;
     orderCount: number;
 };
 
+export type DashboardRange =
+    | "this_week"
+    | "last_week"
+    | "weekly"
+    | "monthly"
+    | "yearly"
+    | "yoy";
+
 type RevenueChartProps = {
     data: Array<DataPoint>;
+    range: DashboardRange;
+    onRangeChange: (range: DashboardRange) => void;
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,12 +79,20 @@ function smoothPath(points: Array<[number, number]>): string {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function RevenueChart({ data }: RevenueChartProps) {
+const RANGE_OPTIONS: Array<{ value: DashboardRange; label: string }> = [
+    { value: "this_week", label: "Minggu ini" },
+    { value: "last_week", label: "Minggu lalu" },
+    { value: "weekly", label: "Mingguan" },
+    { value: "monthly", label: "Bulanan" },
+    { value: "yearly", label: "Tahunan" },
+    { value: "yoy", label: "YoY (Tahun lalu)" },
+];
+
+export default function RevenueChart({ data, range, onRangeChange }: RevenueChartProps) {
     const gradientId = useId();
     const [hovered, setHovered] = useState<number | null>(null);
 
-    // Ensure we only show the last 7 items (caller should already pass 7, but guard)
-    const points = useMemo(() => data.slice(-7), [data]);
+    const points = useMemo(() => data, [data]);
 
     const allZero = useMemo(
         () => points.every((d) => d.revenue === 0),
@@ -139,17 +158,33 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         >
             {/* Card header */}
             <div className="px-5 pt-5 pb-3 border-b border-border">
-                <h3 className="text-base font-semibold tracking-tight text-foreground">
-                    Pendapatan 7 Hari Terakhir
-                </h3>
-                {!allZero && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                        Total:{" "}
-                        <span className="font-medium text-foreground">
-                            {formatIDR(points.reduce((s, d) => s + d.revenue, 0))}
-                        </span>
-                    </p>
-                )}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 className="text-base font-semibold tracking-tight text-foreground">
+                            Pendapatan
+                        </h3>
+                        {!allZero && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Total:{" "}
+                                <span className="font-medium text-foreground">
+                                    {formatIDR(points.reduce((s, d) => s + d.revenue, 0))}
+                                </span>
+                            </p>
+                        )}
+                    </div>
+
+                    <select
+                        value={range}
+                        onChange={(event) => onRangeChange(event.target.value as DashboardRange)}
+                        className="bg-card border border-border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors"
+                    >
+                        {RANGE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
             {/* Chart body */}
@@ -255,7 +290,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                                 const cx = coords[i][0];
                                 const cy = coords[i][1];
                                 const isHovered = hovered === i;
-                                const dayLabel = toDayAbbr(point.date);
+                                const xLabel = point.label || toDayAbbr(point.date);
 
                                 return (
                                     <g key={point.date + i}>
@@ -299,7 +334,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                                             onMouseEnter={() => setHovered(i)}
                                         >
                                             <title>
-                                                {dayLabel}: {formatIDR(point.revenue)} · {point.orderCount} order
+                                                {xLabel}: {formatIDR(point.revenue)} · {point.orderCount} order
                                             </title>
                                         </circle>
 
@@ -343,7 +378,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                                                         fontSize="9.5"
                                                         fill="#D6C8E8"
                                                     >
-                                                        {point.orderCount} order · {dayLabel}
+                                                        {point.orderCount} order · {xLabel}
                                                     </text>
                                                 </g>
                                             );
@@ -362,7 +397,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                                             }
                                             fontWeight={isHovered ? "600" : "400"}
                                         >
-                                            {dayLabel}
+                                            {xLabel}
                                         </text>
                                     </g>
                                 );
