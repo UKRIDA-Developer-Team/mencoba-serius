@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminIngredients } from "@/lib/data/admin";
 import { db } from "@/lib/db";
-import { ingredients, measurementUnits } from "@/lib/schema";
+import { ingredients, ingredientUnitMap, measurementUnits, suppliers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { withAdminAuth } from "@/lib/auth/middleware";
 
@@ -21,40 +21,76 @@ const getHandler = async () => {
 const postHandler = async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { sku, name, reorderLevelBaseQty } = body;
+    const { name, reorderLevelBaseQty, baseUnitId, supplierId } = body;
     const reorderValue = Number(reorderLevelBaseQty);
 
     if (
-      typeof sku !== "string" ||
       typeof name !== "string" ||
+      !baseUnitId ||
       !Number.isFinite(reorderValue) ||
       reorderValue < 0
     ) {
       return NextResponse.json(
-        { success: false, message: "SKU, name, dan reorder level valid wajib diisi" },
+        { success: false, message: "Name, unit, dan reorder level valid wajib diisi" },
         { status: 400 }
       );
     }
 
-    const baseUnit = await db
-      .select({ id: measurementUnits.id })
-      .from(measurementUnits)
-      .where(eq(measurementUnits.code, "g"))
-      .limit(1);
+    const parsedBaseUnitId = BigInt(baseUnitId);
+    const parsedSupplierId = supplierId ? BigInt(supplierId) : undefined;
 
-    const baseUnitId = baseUnit.length > 0 ? baseUnit[0].id : BigInt(1);
+    // Auto-generate SKU
+    const prefix = name.substring(0, 3).toUpperCase().padEnd(3, 'X');
+    const timestamp = Date.now().toString().slice(-4);
+    const random = Math.floor(Math.random() * 900 + 100);
+    const generatedSku = `ING-${prefix}-${timestamp}-${random}`;
 
     const result = await db
       .insert(ingredients)
       .values({
-        sku: sku.toUpperCase(),
+        sku: generatedSku,
         name,
-        baseUnitId,
-        preferredSupplierId: BigInt(1),
+        baseUnitId: parsedBaseUnitId,
+        preferredSupplierId: parsedSupplierId,
         reorderLevelBaseQty: reorderValue.toString(),
         isActive: true,
       })
       .returning();
+
+    // Auto-create ingredient_unit_map entry for the base unit
+    // This is required for stock opname to find available units
+    try {
+      await db.insert(ingredientUnitMap).values({
+        ingredientId: result[0].id,
+        unitId: parsedBaseUnitId,
+        toBaseMultiplier: "1",
+        isPurchaseUnit: false,
+        isRecipeUnit: true,
+      });
+    } catch (mapError) {
+      // Non-fatal: log but don't fail the ingredient creation
+      console.warn("Could not create ingredient_unit_map entry:", mapError);
+    }
+
+    // Look up the actual unit code for the response
+    const unitRow = await db
+      .select({ code: measurementUnits.code })
+      .from(measurementUnits)
+      .where(eq(measurementUnits.id, parsedBaseUnitId))
+      .limit(1);
+
+    const unitCode = unitRow.length > 0 ? unitRow[0].code : "g";
+
+    // Look up supplier name if provided
+    let supplierName = "—";
+    if (parsedSupplierId) {
+      const supplierRow = await db
+        .select({ name: suppliers.name })
+        .from(suppliers)
+        .where(eq(suppliers.id, parsedSupplierId))
+        .limit(1);
+      supplierName = supplierRow.length > 0 ? supplierRow[0].name : "—";
+    }
 
     return NextResponse.json(
       {
@@ -64,10 +100,10 @@ const postHandler = async (request: NextRequest) => {
           id: result[0].id.toString(),
           sku: result[0].sku,
           name: result[0].name,
-          baseUnitCode: "g",
+          baseUnitCode: unitCode,
           reorderLevelBaseQty: Number(result[0].reorderLevelBaseQty),
           currentStockBaseQty: 0,
-          preferredSupplier: "Unknown",
+          preferredSupplier: supplierName,
           isActive: result[0].isActive,
         },
       },
@@ -85,18 +121,18 @@ const postHandler = async (request: NextRequest) => {
 const putHandler = async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { id, sku, name, reorderLevelBaseQty } = body;
+    const { id, name, reorderLevelBaseQty, baseUnitId, supplierId } = body;
     const reorderValue = Number(reorderLevelBaseQty);
 
     if (
       !id ||
-      typeof sku !== "string" ||
       typeof name !== "string" ||
+      !baseUnitId ||
       !Number.isFinite(reorderValue) ||
       reorderValue < 0
     ) {
       return NextResponse.json(
-        { success: false, message: "Field wajib: id, sku, name, reorderLevelBaseQty" },
+        { success: false, message: "Field wajib: id, name, baseUnitId, reorderLevelBaseQty" },
         { status: 400 }
       );
     }
@@ -104,8 +140,9 @@ const putHandler = async (request: NextRequest) => {
     const result = await db
       .update(ingredients)
       .set({
-        sku: sku.toUpperCase(),
         name,
+        baseUnitId: BigInt(baseUnitId),
+        preferredSupplierId: supplierId ? BigInt(supplierId) : undefined,
         reorderLevelBaseQty: reorderValue.toString(),
         updatedAt: new Date(),
       })

@@ -24,6 +24,18 @@ export default function ProductCarouselClient({
                 className="object-cover"
                 sizes="100vw"
             />
+            
+            {product.tag && (
+                <div 
+                    className="absolute top-3 right-3 px-2.5 py-1 rounded-md text-xs uppercase font-semibold tracking-[0.08em] shadow-sm z-10"
+                    style={{
+                        backgroundColor: product.tag === "Best Seller" ? "var(--color-chart-2)" : "var(--color-accent)",
+                        color: product.tag === "Best Seller" ? "var(--color-background)" : "var(--color-primary)"
+                    }}
+                >
+                    {product.tag}
+                </div>
+            )}
 
             <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 via-black/20 to-transparent px-5 py-4">
                 <h3 className="text-white font-bold text-base leading-tight">

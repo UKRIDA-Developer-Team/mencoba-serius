@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Toast from "@/features/admin/components/dashboard/toast";
-import { Search, Plus, Edit3, Check, X, Trash2, Package } from "lucide-react";
+import { Search, Plus, Edit3, Check, X, Trash2, Package, Scale, Truck } from "lucide-react";
 
 type Ingredient = {
   id: string;
@@ -18,6 +18,27 @@ type Ingredient = {
   preferredSupplier: string;
   isActive: boolean;
 };
+
+type MeasurementUnit = {
+  id: string;
+  code: string;
+  name: string;
+  unitType: string;
+};
+
+type Supplier = {
+  id: string;
+  name: string;
+  contactName: string | null;
+  phone: string | null;
+};
+
+const UNIT_TYPES = [
+  { value: "mass", label: "Massa (g, kg, ...)" },
+  { value: "volume", label: "Volume (ml, l, ...)" },
+  { value: "count", label: "Hitungan (pcs, lusin, ...)" },
+  { value: "package", label: "Kemasan (tray, box, ...)" },
+];
 
 function StockIndicator({ current, reorder }: { current: number; reorder: number }) {
   const ratio = reorder > 0 ? Math.min(current / reorder, 2) : (current > 0 ? 2 : 0);
@@ -35,49 +56,78 @@ function StockIndicator({ current, reorder }: { current: number; reorder: number
 
 export default function InventoryIngredientsPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [units, setUnits] = useState<MeasurementUnit[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
-  const [form, setForm] = useState({ name: "", sku: "", reorder: "" });
+  const [form, setForm] = useState({ name: "", reorder: "", baseUnitId: "", supplierId: "" });
   const [editId, setEditId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", sku: "", reorder: "" });
+  const [editForm, setEditForm] = useState({ name: "", reorder: "", baseUnitId: "", supplierId: "" });
+
+  // New unit form state
+  const [showNewUnit, setShowNewUnit] = useState(false);
+  const [unitForm, setUnitForm] = useState({ code: "", name: "", unitType: "mass" });
+  const [isAddingUnit, setIsAddingUnit] = useState(false);
+
+  // New supplier form state
+  const [showNewSupplier, setShowNewSupplier] = useState(false);
+  const [supplierForm, setSupplierForm] = useState({ name: "", contactName: "", phone: "" });
+  const [isAddingSupplier, setIsAddingSupplier] = useState(false);
 
   const showToast = (message: string) => {
     setToast(message);
     setTimeout(() => setToast(""), 2500);
   };
 
-  const loadIngredients = useCallback(async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await authenticatedFetch("/api/admin/ingredients");
-      const payload = await response.json();
-      if (response.ok && payload.success) {
-        setIngredients(payload.data);
+      const [ingRes, unitRes, supplierRes] = await Promise.all([
+        authenticatedFetch("/api/admin/ingredients"),
+        authenticatedFetch("/api/admin/measurement-units"),
+        authenticatedFetch("/api/admin/suppliers"),
+      ]);
+      
+      const ingPayload = await ingRes.json();
+      const unitPayload = await unitRes.json();
+      const supplierPayload = await supplierRes.json();
+      
+      if (ingRes.ok && ingPayload.success) {
+        setIngredients(ingPayload.data);
+      }
+      if (unitRes.ok && unitPayload.success) {
+        setUnits(unitPayload.data);
+        if (unitPayload.data.length > 0) {
+          setForm(prev => ({ ...prev, baseUnitId: unitPayload.data[0].id.toString() }));
+        }
+      }
+      if (supplierRes.ok && supplierPayload.success) {
+        setSuppliers(supplierPayload.data);
       }
     } catch {
-      showToast("Gagal memuat ingredients");
+      showToast("Gagal memuat data");
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadIngredients();
-  }, [loadIngredients]);
+    loadData();
+  }, [loadData]);
 
   const filteredIngredients = useMemo(() => {
     if (!search.trim()) return ingredients;
     const q = search.toLowerCase();
     return ingredients.filter(
-      (item) => item.name.toLowerCase().includes(q) || item.sku.toLowerCase().includes(q)
+      (item) => item.name.toLowerCase().includes(q)
     );
   }, [ingredients, search]);
 
   const handleAdd = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const reorder = Number(form.reorder || 0);
-    if (!form.name || !form.sku || reorder < 0) {
+    if (!form.name || !form.baseUnitId || reorder < 0) {
       showToast("Data ingredient tidak valid");
       return;
     }
@@ -88,8 +138,9 @@ export default function InventoryIngredientsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name,
-          sku: form.sku,
+          baseUnitId: form.baseUnitId,
           reorderLevelBaseQty: reorder,
+          supplierId: form.supplierId || undefined,
         }),
       });
 
@@ -97,25 +148,104 @@ export default function InventoryIngredientsPage() {
       if (!response.ok || !payload.success) throw new Error();
 
       setIngredients((prev) => [payload.data, ...prev]);
-      setForm({ name: "", sku: "", reorder: "" });
+      setForm({ name: "", reorder: "", baseUnitId: units.length > 0 ? units[0].id.toString() : "", supplierId: "" });
       showToast("Ingredient ditambahkan");
     } catch {
       showToast("Gagal menambahkan ingredient");
     }
   };
 
+  const handleAddUnit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!unitForm.code.trim() || !unitForm.name.trim()) {
+      showToast("Kode dan nama unit wajib diisi");
+      return;
+    }
+
+    setIsAddingUnit(true);
+    try {
+      const response = await authenticatedFetch("/api/admin/measurement-units", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: unitForm.code,
+          name: unitForm.name,
+          unitType: unitForm.unitType,
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        showToast(payload.message || "Gagal menambahkan unit");
+        return;
+      }
+
+      const newUnit = payload.data;
+      setUnits((prev) => [...prev, newUnit]);
+      setForm((prev) => ({ ...prev, baseUnitId: newUnit.id }));
+      setUnitForm({ code: "", name: "", unitType: "mass" });
+      setShowNewUnit(false);
+      showToast(`Unit "${newUnit.code}" berhasil ditambahkan`);
+    } catch {
+      showToast("Gagal menambahkan unit");
+    } finally {
+      setIsAddingUnit(false);
+    }
+  };
+
+  const handleAddSupplier = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!supplierForm.name.trim()) {
+      showToast("Nama supplier wajib diisi");
+      return;
+    }
+
+    setIsAddingSupplier(true);
+    try {
+      const response = await authenticatedFetch("/api/admin/suppliers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: supplierForm.name,
+          contactName: supplierForm.contactName || undefined,
+          phone: supplierForm.phone || undefined,
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        showToast(payload.message || "Gagal menambahkan supplier");
+        return;
+      }
+
+      const newSupplier = payload.data;
+      setSuppliers((prev) => [...prev, newSupplier]);
+      setForm((prev) => ({ ...prev, supplierId: newSupplier.id }));
+      setSupplierForm({ name: "", contactName: "", phone: "" });
+      setShowNewSupplier(false);
+      showToast(`Supplier "${newSupplier.name}" berhasil ditambahkan`);
+    } catch {
+      showToast("Gagal menambahkan supplier");
+    } finally {
+      setIsAddingSupplier(false);
+    }
+  };
+
   const startEdit = (ingredient: Ingredient) => {
     setEditId(ingredient.id);
+    const unitId = units.find(u => u.code === ingredient.baseUnitCode)?.id.toString() || (units.length > 0 ? units[0].id.toString() : "");
+    const suppId = suppliers.find(s => s.name === ingredient.preferredSupplier)?.id.toString() || "";
     setEditForm({
       name: ingredient.name,
-      sku: ingredient.sku,
+      baseUnitId: unitId,
       reorder: ingredient.reorderLevelBaseQty.toString(),
+      supplierId: suppId,
     });
   };
 
   const cancelEdit = () => {
     setEditId(null);
-    setEditForm({ name: "", sku: "", reorder: "" });
+    setEditForm({ name: "", reorder: "", baseUnitId: "", supplierId: "" });
   };
 
   const saveEdit = async () => {
@@ -129,8 +259,9 @@ export default function InventoryIngredientsPage() {
         body: JSON.stringify({
           id: editId,
           name: editForm.name,
-          sku: editForm.sku,
+          baseUnitId: editForm.baseUnitId,
           reorderLevelBaseQty: reorder,
+          supplierId: editForm.supplierId || undefined,
         }),
       });
 
@@ -220,23 +351,14 @@ export default function InventoryIngredientsPage() {
         <CardHeader>
           <CardTitle className="text-base">Tambah Ingredient</CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAdd} className="grid sm:grid-cols-4 gap-3 items-end">
+        <CardContent className="space-y-4">
+          <form onSubmit={handleAdd} className="grid sm:grid-cols-5 gap-3 items-end">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Nama</label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                 className="bg-card border-border rounded-lg"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">SKU</label>
-              <Input
-                value={form.sku}
-                onChange={(e) => setForm((p) => ({ ...p, sku: e.target.value }))}
-                className="bg-card border-border rounded-lg font-mono"
                 required
               />
             </div>
@@ -251,10 +373,198 @@ export default function InventoryIngredientsPage() {
                 required
               />
             </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Satuan</label>
+              <div className="flex gap-1.5">
+                <select
+                  value={form.baseUnitId}
+                  onChange={(e) => setForm((p) => ({ ...p, baseUnitId: e.target.value }))}
+                  className="h-7 w-full rounded-md border border-input bg-input/20 px-2 py-0.5 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 dark:bg-input/30"
+                  required
+                >
+                  <option value="" disabled>Pilih satuan</option>
+                  {units.map(u => (
+                    <option key={u.id} value={u.id.toString()}>{u.code} — {u.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => { setShowNewUnit(!showNewUnit); setShowNewSupplier(false); }}
+                  className={`flex-shrink-0 size-7 rounded-md border flex items-center justify-center transition-all ${
+                    showNewUnit
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-input text-muted-foreground hover:text-accent hover:border-accent/50"
+                  }`}
+                  title="Tambah satuan baru"
+                >
+                  <Plus className="size-3.5" />
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Supplier</label>
+              <div className="flex gap-1.5">
+                <select
+                  value={form.supplierId}
+                  onChange={(e) => setForm((p) => ({ ...p, supplierId: e.target.value }))}
+                  className="h-7 w-full rounded-md border border-input bg-input/20 px-2 py-0.5 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 dark:bg-input/30"
+                >
+                  <option value="">Tanpa supplier</option>
+                  {suppliers.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => { setShowNewSupplier(!showNewSupplier); setShowNewUnit(false); }}
+                  className={`flex-shrink-0 size-7 rounded-md border flex items-center justify-center transition-all ${
+                    showNewSupplier
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-input text-muted-foreground hover:text-accent hover:border-accent/50"
+                  }`}
+                  title="Tambah supplier baru"
+                >
+                  <Plus className="size-3.5" />
+                </button>
+              </div>
+            </div>
             <Button type="submit" className="gap-1">
               <Plus className="size-4" /> Tambah
             </Button>
           </form>
+
+          {/* New Unit Inline Form */}
+          {showNewUnit && (
+            <div className="relative">
+              <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 space-y-3 animate-in slide-in-from-top-2 fade-in duration-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <Scale className="size-4 text-accent" />
+                  <span className="text-sm font-semibold text-foreground">Tambah Satuan Baru</span>
+                  <button
+                    type="button"
+                    onClick={() => { setShowNewUnit(false); setUnitForm({ code: "", name: "", unitType: "mass" }); }}
+                    className="ml-auto p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+                <form onSubmit={handleAddUnit} className="grid sm:grid-cols-4 gap-3 items-end">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Kode</label>
+                    <Input
+                      value={unitForm.code}
+                      onChange={(e) => setUnitForm((p) => ({ ...p, code: e.target.value }))}
+                      placeholder="cth: tbsp"
+                      className="bg-card border-border rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Nama</label>
+                    <Input
+                      value={unitForm.name}
+                      onChange={(e) => setUnitForm((p) => ({ ...p, name: e.target.value }))}
+                      placeholder="cth: Tablespoon"
+                      className="bg-card border-border rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Tipe</label>
+                    <select
+                      value={unitForm.unitType}
+                      onChange={(e) => setUnitForm((p) => ({ ...p, unitType: e.target.value }))}
+                      className="h-7 w-full rounded-md border border-input bg-input/20 px-2 py-0.5 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 dark:bg-input/30"
+                      required
+                    >
+                      {UNIT_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <Button type="submit" disabled={isAddingUnit} className="gap-1" variant="outline">
+                    {isAddingUnit ? (
+                      <>
+                        <div className="size-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                        Menyimpan...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="size-4" /> Simpan Unit
+                      </>
+                    )}
+                  </Button>
+                </form>
+                <p className="text-[11px] text-muted-foreground">
+                  Unit yang ditambahkan akan langsung tersedia di dropdown satuan.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* New Supplier Inline Form */}
+          {showNewSupplier && (
+            <div className="relative">
+              <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 space-y-3 animate-in slide-in-from-top-2 fade-in duration-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <Truck className="size-4 text-accent" />
+                  <span className="text-sm font-semibold text-foreground">Tambah Supplier Baru</span>
+                  <button
+                    type="button"
+                    onClick={() => { setShowNewSupplier(false); setSupplierForm({ name: "", contactName: "", phone: "" }); }}
+                    className="ml-auto p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+                <form onSubmit={handleAddSupplier} className="grid sm:grid-cols-4 gap-3 items-end">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Nama Supplier</label>
+                    <Input
+                      value={supplierForm.name}
+                      onChange={(e) => setSupplierForm((p) => ({ ...p, name: e.target.value }))}
+                      placeholder="cth: Fresh Dairy Co"
+                      className="bg-card border-border rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Kontak</label>
+                    <Input
+                      value={supplierForm.contactName}
+                      onChange={(e) => setSupplierForm((p) => ({ ...p, contactName: e.target.value }))}
+                      placeholder="cth: Budi Santoso"
+                      className="bg-card border-border rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Telepon</label>
+                    <Input
+                      value={supplierForm.phone}
+                      onChange={(e) => setSupplierForm((p) => ({ ...p, phone: e.target.value }))}
+                      placeholder="cth: +62-812-xxxx"
+                      className="bg-card border-border rounded-lg"
+                    />
+                  </div>
+                  <Button type="submit" disabled={isAddingSupplier} className="gap-1" variant="outline">
+                    {isAddingSupplier ? (
+                      <>
+                        <div className="size-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                        Menyimpan...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="size-4" /> Simpan Supplier
+                      </>
+                    )}
+                  </Button>
+                </form>
+                <p className="text-[11px] text-muted-foreground">
+                  Supplier yang ditambahkan akan langsung tersedia di dropdown.
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -308,29 +618,46 @@ export default function InventoryIngredientsPage() {
                   {/* Name / Edit */}
                   <div>
                     {editId === ingredient.id ? (
-                      <div className="flex gap-2">
-                        <input
-                          className="bg-card border border-border rounded px-2 py-1 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-accent/40"
-                          value={editForm.name}
-                          onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
-                        />
-                        <input
-                          className="bg-card border border-border rounded px-2 py-1 text-sm w-20 font-mono focus:outline-none focus:ring-1 focus:ring-accent/40"
-                          value={editForm.sku}
-                          onChange={(e) => setEditForm((p) => ({ ...p, sku: e.target.value }))}
-                        />
-                        <input
-                          type="number"
-                          min={0}
-                          className="bg-card border border-border rounded px-2 py-1 text-sm w-16 focus:outline-none focus:ring-1 focus:ring-accent/40"
-                          value={editForm.reorder}
-                          onChange={(e) => setEditForm((p) => ({ ...p, reorder: e.target.value }))}
-                        />
+                      <div className="space-y-1.5">
+                        <div className="flex gap-2">
+                          <input
+                            className="bg-card border border-border rounded px-2 py-1 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-accent/40"
+                            value={editForm.name}
+                            onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+                          />
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              min={0}
+                              className="bg-card border border-border rounded px-2 py-1 text-sm w-16 focus:outline-none focus:ring-1 focus:ring-accent/40"
+                              value={editForm.reorder}
+                              onChange={(e) => setEditForm((p) => ({ ...p, reorder: e.target.value }))}
+                            />
+                            <select
+                              value={editForm.baseUnitId}
+                              onChange={(e) => setEditForm((p) => ({ ...p, baseUnitId: e.target.value }))}
+                              className="bg-card border border-input rounded px-1 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-accent/40 dark:bg-input/30"
+                            >
+                              {units.map(u => (
+                                <option key={u.id} value={u.id.toString()}>{u.code}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <select
+                          value={editForm.supplierId}
+                          onChange={(e) => setEditForm((p) => ({ ...p, supplierId: e.target.value }))}
+                          className="bg-card border border-input rounded px-1 py-1 text-xs w-full focus:outline-none focus:ring-1 focus:ring-accent/40 dark:bg-input/30"
+                        >
+                          <option value="">Tanpa supplier</option>
+                          {suppliers.map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
                       </div>
                     ) : (
                       <>
                         <p className="text-sm font-medium">{ingredient.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{ingredient.sku}</p>
                       </>
                     )}
                   </div>

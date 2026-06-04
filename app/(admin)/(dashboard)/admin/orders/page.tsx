@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { authenticatedFetch } from "@/lib/auth/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, ShoppingCart } from "lucide-react";
+import { Search, ShoppingCart, ChevronDown, ChevronRight, PackageOpen } from "lucide-react";
 import Toast from "@/features/admin/components/dashboard/toast";
 
 type OrderStatus = "DRAFT" | "CONFIRMED" | "IN_PRODUCTION" | "READY" | "COMPLETED" | "CANCELLED";
@@ -17,6 +17,20 @@ type OrderItem = {
   status: OrderStatus;
   totalAmount: number;
   orderedAt: string;
+  items: {
+    id: string;
+    itemNameSnapshot: string;
+    quantity: number;
+    unitPrice: number;
+    notes: string | null;
+    customCake: {
+      occasion: string | null;
+      cakeSizeLabel: string | null;
+      flavor: string | null;
+      designNotes: string | null;
+      inscriptionText: string | null;
+    } | null;
+  }[];
 };
 
 const ORDER_STATUSES: OrderStatus[] = ["DRAFT", "CONFIRMED", "IN_PRODUCTION", "READY", "COMPLETED", "CANCELLED"];
@@ -62,6 +76,7 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -174,8 +189,16 @@ export default function OrdersPage() {
           ) : (
             <div className="divide-y divide-border">
               {filteredOrders.map((order) => (
-                <div key={order.id} className="py-3 first:pt-0 last:pb-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <div key={order.id} className="rounded-xl border border-border/50 bg-card mb-3 last:mb-0 overflow-hidden transition-colors hover:border-border">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 py-3">
+                    {/* Expand toggle */}
+                    <button
+                      onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
+                      className="text-muted-foreground hover:text-accent transition-colors shrink-0"
+                    >
+                      {expandedId === order.id ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                    </button>
+
                     {/* Order info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
@@ -186,6 +209,10 @@ export default function OrdersPage() {
                         <span>{order.customerName}</span>
                         <span className="px-1.5 py-0.5 rounded bg-muted text-xs">
                           {TYPE_LABELS[order.orderType] || order.orderType}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <PackageOpen className="size-3" />
+                          {order.items?.length || 0} items
                         </span>
                       </div>
                     </div>
@@ -211,6 +238,63 @@ export default function OrdersPage() {
                       </select>
                     </div>
                   </div>
+
+                  {/* Accordion Content */}
+                  {expandedId === order.id && (
+                    <div className="px-4 pb-4 pt-1 border-t border-border/50 bg-muted/10">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 mt-2">
+                        Detail Item
+                      </p>
+                      
+                      {(!order.items || order.items.length === 0) ? (
+                        <p className="text-xs text-muted-foreground">Tidak ada detail item.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {order.items.map((item) => (
+                            <div key={item.id} className="flex flex-col sm:flex-row gap-3 p-3 rounded-lg border border-border/50 bg-card">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium">{item.itemNameSnapshot}</p>
+                                
+                                {/* Custom Cake Details */}
+                                {item.customCake && (
+                                  <div className="mt-2 space-y-1 bg-accent/5 p-2 rounded text-xs border border-accent/10">
+                                    <p className="font-medium text-accent-foreground mb-1">Customization</p>
+                                    {item.customCake.occasion && <p><span className="text-muted-foreground">Acara:</span> {item.customCake.occasion}</p>}
+                                    {item.customCake.cakeSizeLabel && <p><span className="text-muted-foreground">Ukuran:</span> {item.customCake.cakeSizeLabel}</p>}
+                                    {item.customCake.flavor && <p><span className="text-muted-foreground">Rasa:</span> {item.customCake.flavor}</p>}
+                                    {item.customCake.designNotes && <p><span className="text-muted-foreground">Desain:</span> {item.customCake.designNotes}</p>}
+                                    {item.customCake.inscriptionText && <p><span className="text-muted-foreground">Tulisan:</span> {item.customCake.inscriptionText}</p>}
+                                  </div>
+                                )}
+                                
+                                {/* Notes */}
+                                {item.notes && (
+                                  <p className="text-xs mt-1.5 text-muted-foreground bg-muted p-1.5 rounded inline-block">
+                                    <span className="font-medium text-foreground">Catatan:</span> {item.notes}
+                                  </p>
+                                )}
+                              </div>
+                              
+                              <div className="flex items-start gap-4 sm:gap-6 shrink-0 text-right">
+                                <div>
+                                  <p className="text-xs text-muted-foreground mb-0.5">Harga</p>
+                                  <p className="text-sm tabular-nums">{formatIDR(item.unitPrice)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground mb-0.5">Qty</p>
+                                  <p className="text-sm font-medium tabular-nums">{item.quantity}x</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground mb-0.5">Subtotal</p>
+                                  <p className="text-sm font-semibold tabular-nums">{formatIDR(item.unitPrice * item.quantity)}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

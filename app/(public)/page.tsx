@@ -3,6 +3,7 @@ import HeroSection from "@/features/guest/components/layouts/Hero";
 import Marquee from "@/components/ui/marquee";
 import Products from "@/features/guest/components/layouts/Products";
 import Recomendation from "@/features/guest/components/layouts/Recomendation";
+import Testimonial from "@/features/guest/components/layouts/Testimonial";
 
 export const metadata: Metadata = {
   title: "Beranda - Kue Custom & Pastry Artisan | Chef On Pointe",
@@ -16,6 +17,7 @@ export default function Home() {
       <Marquee />
       <Recomendation />
       <Products />
+      <Testimonial />
     </div>
   );
 }

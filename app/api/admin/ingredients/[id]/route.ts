@@ -6,10 +6,11 @@ import { withAdminAuth } from "@/lib/auth/middleware";
 
 const deleteHandler = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  payload: any,
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const result = await db
       .delete(ingredients)

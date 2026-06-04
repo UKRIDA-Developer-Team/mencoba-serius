@@ -1,9 +1,8 @@
 import { getRecommendedProducts } from "@/lib/data/product";
 import ProductCarouselClient from "./ProductCarouselClient";
 
-export default async function Recomendation() {
-    // TODO: ganti getRecommendedProducts() dengan query produk andalan dari database
-    const products = getRecommendedProducts();
+export default async function Recommendation() {
+    const products = await getRecommendedProducts();
 
     return (
         <section className="w-full my-6 max-w-6xl mx-auto">

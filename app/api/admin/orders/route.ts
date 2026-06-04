@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { customers, salesOrders } from "@/lib/schema";
-import { desc, eq } from "drizzle-orm";
+import { customers, salesOrders, salesOrderItems, customCakeRequests } from "@/lib/schema";
+import { desc, eq, inArray } from "drizzle-orm";
 import { withAdminAuth } from "@/lib/auth/middleware";
 
 const ORDER_TYPES = ["WALK_IN", "PRE_ORDER", "CUSTOM_CAKE"] as const;
@@ -44,6 +44,31 @@ const getHandler = async () => {
       .leftJoin(customers, eq(salesOrders.customerId, customers.id))
       .orderBy(desc(salesOrders.orderedAt));
 
+    const orderIds = result.map((r) => r.id);
+    
+    let allItems: any[] = [];
+    if (orderIds.length > 0) {
+      allItems = await db
+        .select({
+          id: salesOrderItems.id,
+          salesOrderId: salesOrderItems.salesOrderId,
+          itemNameSnapshot: salesOrderItems.itemNameSnapshot,
+          quantity: salesOrderItems.quantity,
+          unitPrice: salesOrderItems.unitPrice,
+          notes: salesOrderItems.notes,
+          customCake: {
+            occasion: customCakeRequests.occasion,
+            cakeSizeLabel: customCakeRequests.cakeSizeLabel,
+            flavor: customCakeRequests.flavor,
+            designNotes: customCakeRequests.designNotes,
+            inscriptionText: customCakeRequests.inscriptionText,
+          }
+        })
+        .from(salesOrderItems)
+        .leftJoin(customCakeRequests, eq(salesOrderItems.id, customCakeRequests.salesOrderItemId))
+        .where(inArray(salesOrderItems.salesOrderId, orderIds));
+    }
+
     return NextResponse.json(
       {
         success: true,
@@ -55,6 +80,16 @@ const getHandler = async () => {
           totalAmount: Number(order.totalAmount),
           orderedAt: order.orderedAt,
           customerName: order.customerName ?? "Guest",
+          items: allItems
+            .filter((item) => item.salesOrderId === order.id)
+            .map((item) => ({
+              id: item.id.toString(),
+              itemNameSnapshot: item.itemNameSnapshot,
+              quantity: Number(item.quantity),
+              unitPrice: Number(item.unitPrice),
+              notes: item.notes,
+              customCake: item.customCake?.occasion ? item.customCake : null,
+            })),
         })),
       },
       { status: 200 }
@@ -91,7 +126,7 @@ const postHandler = async (request: NextRequest) => {
       );
     }
 
-    let customerId: bigint | null = null;
+    let customerId: bigint | undefined = undefined;
     if (customerName.length > 0) {
       const existingCustomer = await db
         .select({ id: customers.id })

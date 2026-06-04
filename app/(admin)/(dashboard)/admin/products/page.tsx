@@ -27,9 +27,6 @@ type ProductVariant = {
 type Category = { id: string; name: string };
 
 // Helpers
-const toSlug = (name: string) =>
-  name.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-
 function formatIDR(value: number) {
   return `Rp\u00a0${value.toLocaleString("id-ID")}`;
 }
@@ -194,21 +191,13 @@ export default function ProductsPage() {
   const [variantCounts, setVariantCounts] = useState<Record<string, number>>({});
 
   // Add form
-  const [addForm, setAddForm] = useState({ name: "", slug: "", category: "", price: "" });
-  const [slugManual, setSlugManual] = useState(false);
+  const [addForm, setAddForm] = useState({ name: "", category: "", price: "" });
 
   // Edit form
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<AdminProduct | null>(null);
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 2500); };
-
-  // Auto-slug
-  useEffect(() => {
-    if (!slugManual && addForm.name) {
-      setAddForm((p) => ({ ...p, slug: toSlug(p.name) }));
-    }
-  }, [addForm.name, slugManual]);
 
   // Load data
   const loadData = useCallback(async () => {
@@ -249,7 +238,7 @@ export default function ProductsPage() {
     if (!search.trim()) return products;
     const q = search.toLowerCase();
     return products.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q)
+      (p) => p.name.toLowerCase().includes(q)
     );
   }, [products, search]);
 
@@ -257,7 +246,7 @@ export default function ProductsPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const price = Number(addForm.price);
-    if (!addForm.name || !addForm.slug || !addForm.category || price <= 0) {
+    if (!addForm.name || !addForm.category || price <= 0) {
       showToast("Lengkapi semua field");
       return;
     }
@@ -267,7 +256,6 @@ export default function ProductsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: addForm.name,
-          slug: addForm.slug,
           category: addForm.category,
           basePrice: price,
         }),
@@ -275,8 +263,7 @@ export default function ProductsPage() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error();
       setProducts((prev) => [data.data, ...prev]);
-      setAddForm({ name: "", slug: "", category: categories[0]?.name || "", price: "" });
-      setSlugManual(false);
+      setAddForm({ name: "", category: categories[0]?.name || "", price: "" });
       showToast("Produk ditambahkan!");
     } catch { showToast("Gagal menambahkan produk"); }
   };
@@ -317,7 +304,6 @@ export default function ProductsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          slug: editForm.slug,
           name: editForm.name,
           category: editForm.category,
           basePrice: editForm.basePrice,
@@ -388,22 +374,6 @@ export default function ProductsPage() {
                   onChange={(e) => setAddForm((p) => ({ ...p, name: e.target.value }))}
                   placeholder="e.g. Kue Coklat"
                   className="bg-card border-border rounded-lg"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                  Slug
-                  <span className="ml-2 text-[10px] font-normal normal-case tracking-normal text-accent">
-                    {slugManual ? "(manual)" : "(otomatis)"}
-                  </span>
-                </label>
-                <Input
-                  value={addForm.slug}
-                  onChange={(e) => { setSlugManual(true); setAddForm((p) => ({ ...p, slug: e.target.value })); }}
-                  onBlur={() => { if (!addForm.slug.trim()) setSlugManual(false); }}
-                  placeholder="kue-coklat"
-                  className="bg-card border-border rounded-lg font-mono text-sm"
                   required
                 />
               </div>

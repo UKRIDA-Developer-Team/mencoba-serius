@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import AddToCartButton from "@/features/guest/components/cart/AddToCartButton";
-import { getProducts } from "@/lib/data/product";
+import { getProducts, getVariantsForProducts } from "@/lib/data/product";
 
 export const metadata: Metadata = {
-  title: "Katalog Kue - Pilih Kue Favorit Anda | Chef On Pointe",
-  description: "Jelajahi koleksi lengkap kue custom kami. Kue ulang tahun, pernikahan, anniversary, dan pastry spesial lainnya.",
+    title: "Katalog Kue - Pilih Kue Favorit Anda | Chef On Pointe",
+    description: "Jelajahi koleksi lengkap kue custom kami. Kue ulang tahun, pernikahan, anniversary, dan pastry spesial lainnya.",
 };
 
 export default async function CatalogPage({
@@ -22,6 +22,10 @@ export default async function CatalogPage({
         search: search || undefined,
         category: selectedCategory || undefined,
     });
+
+    // Fetch variants for all products in one query
+    const productIds = products.map((p) => p.id);
+    const variantMap = await getVariantsForProducts(productIds);
 
     const categories = Array.from(new Set((await getProducts()).map((product) => product.category)));
 
@@ -89,58 +93,66 @@ export default async function CatalogPage({
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {products.map((product) => (
-                        <article
-                            key={product.slug}
-                            className="bg-card border border-border rounded-xl overflow-hidden shadow-sm flex flex-col"
-                        >
-                            <Link href={`/catalog/${product.slug}`} className="relative aspect-square bg-background">
-                                <Image
-                                    src={product.image}
-                                    alt={product.name}
-                                    fill
-                                    className="object-contain"
-                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                />
-                            </Link>
-
-                            <div className="p-4 flex flex-col gap-3 flex-1">
-                                <div className="flex items-start justify-between gap-2">
-                                    <h2 className="font-semibold text-primary">{product.name}</h2>
-                                    <span className="text-sm whitespace-nowrap border border-border rounded-full px-2 py-1">
-                                        {product.size}
-                                    </span>
-                                </div>
-                                <p className="text-xs text-foreground/70 line-clamp-3">{product.description}</p>
-                                <p className="text-sm font-semibold">
-                                    {product.price.toLocaleString("id-ID", {
-                                        style: "currency",
-                                        currency: "IDR",
-                                        minimumFractionDigits: 0,
-                                    })}
-                                </p>
-                                <div className="mt-auto grid grid-cols-2 gap-2">
-                                    <Link
-                                        href={`/catalog/${product.slug}`}
-                                        className="h-9 rounded-lg border border-border text-sm font-medium inline-flex items-center justify-center hover:bg-background transition-colors"
-                                    >
-                                        View
-                                    </Link>
-                                    <AddToCartButton
-                                        item={{
-                                            slug: product.slug,
-                                            name: product.name,
-                                            image: product.image,
-                                            category: product.category,
-                                            size: product.size,
-                                            price: product.price,
-                                        }}
-                                        className="h-9"
+                    {products.map((product) => {
+                        const variants = variantMap.get(product.id) || [];
+                        return (
+                            <article
+                                key={product.slug}
+                                className="bg-card border border-border rounded-xl overflow-hidden shadow-sm flex flex-col"
+                            >
+                                <Link href={`/catalog/${product.slug}`} className="relative aspect-square bg-background">
+                                    <Image
+                                        src={product.image}
+                                        alt={product.name}
+                                        fill
+                                        className="object-contain"
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     />
+                                </Link>
+
+                                <div className="p-4 flex flex-col gap-3 flex-1">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <h2 className="font-semibold text-primary">{product.name}</h2>
+                                        <span className="text-sm whitespace-nowrap border border-border rounded-full px-2 py-1">
+                                            {product.size}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-foreground/70 line-clamp-3">{product.description}</p>
+                                    <p className="text-sm font-semibold">
+                                        {product.price.toLocaleString("id-ID", {
+                                            style: "currency",
+                                            currency: "IDR",
+                                            minimumFractionDigits: 0,
+                                        })}
+                                    </p>
+                                    <div className="mt-auto grid grid-cols-2 gap-2">
+                                        <Link
+                                            href={`/catalog/${product.slug}`}
+                                            className="h-9 rounded-lg border border-border text-sm font-medium inline-flex items-center justify-center hover:bg-background transition-colors"
+                                        >
+                                            View
+                                        </Link>
+                                        <AddToCartButton
+                                            item={{
+                                                slug: product.slug,
+                                                name: product.name,
+                                                image: product.image,
+                                                category: product.category,
+                                                size: product.size,
+                                                price: product.price,
+                                            }}
+                                            variants={variants.length > 0 ? variants.map((v) => ({
+                                                id: v.id,
+                                                label: v.label,
+                                                priceOverride: v.priceOverride,
+                                            })) : undefined}
+                                            className="h-9"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        </article>
-                    ))}
+                            </article>
+                        );
+                    })}
                 </div>
             )}
         </section>

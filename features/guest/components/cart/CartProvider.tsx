@@ -18,6 +18,8 @@ export type CartItem = {
     size: string;
     price: number;
     quantity: number;
+    variantId?: number;
+    variantLabel?: string;
 };
 
 type CartContextValue = {
@@ -25,8 +27,8 @@ type CartContextValue = {
     totalItems: number;
     totalPrice: number;
     addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
-    removeItem: (slug: string) => void;
-    updateQuantity: (slug: string, quantity: number) => void;
+    removeItem: (slug: string, variantId?: number) => void;
+    updateQuantity: (slug: string, quantity: number, variantId?: number) => void;
     clearCart: () => void;
 };
 
@@ -59,10 +61,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const addItem = useCallback((item: Omit<CartItem, "quantity">, quantity = 1) => {
         setItems((prev) => {
-            const existing = prev.find((entry) => entry.slug === item.slug);
+            const existing = prev.find(
+                (entry) => entry.slug === item.slug && entry.variantId === item.variantId
+            );
             if (existing) {
                 return prev.map((entry) =>
-                    entry.slug === item.slug
+                    entry.slug === item.slug && entry.variantId === item.variantId
                         ? { ...entry, quantity: entry.quantity + quantity }
                         : entry
                 );
@@ -71,15 +75,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
-    const removeItem = useCallback((slug: string) => {
-        setItems((prev) => prev.filter((entry) => entry.slug !== slug));
+    const removeItem = useCallback((slug: string, variantId?: number) => {
+        setItems((prev) => prev.filter(
+            (entry) => !(entry.slug === slug && entry.variantId === variantId)
+        ));
     }, []);
 
-    const updateQuantity = useCallback((slug: string, quantity: number) => {
+    const updateQuantity = useCallback((slug: string, quantity: number, variantId?: number) => {
         setItems((prev) =>
             prev
                 .map((entry) =>
-                    entry.slug === slug
+                    entry.slug === slug && entry.variantId === variantId
                         ? { ...entry, quantity: Math.max(0, Math.floor(quantity)) }
                         : entry
                 )

@@ -24,9 +24,9 @@ const getHandler = async (request: NextRequest) => {
 const postHandler = async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { slug, name, category, basePrice } = body;
+    const { name, category, basePrice } = body;
 
-    if (!slug || !name || !category || basePrice === undefined) {
+    if (!name || !category || basePrice === undefined) {
       return NextResponse.json(
         { success: false, message: "Semua field wajib diisi" },
         { status: 400 }
@@ -47,10 +47,17 @@ const postHandler = async (request: NextRequest) => {
       );
     }
 
+    const toSlug = (str: string) =>
+      str.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+    
+    // Add random suffix to ensure uniqueness just in case
+    const randomSuffix = Math.floor(Math.random() * 9000 + 1000);
+    const generatedSlug = `${toSlug(name)}-${randomSuffix}`;
+
     const result = await db
       .insert(products)
       .values({
-        slug: slug.toLowerCase(),
+        slug: generatedSlug,
         name,
         categoryId: cat[0].id,
         basePrice: basePrice.toString(),

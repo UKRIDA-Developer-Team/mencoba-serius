@@ -32,9 +32,11 @@ export default function CartReviewStep() {
                         </button>
                     </div>
 
-                    {items.map((item) => (
+                    {items.map((item) => {
+                        const itemKey = `${item.slug}-${item.variantId ?? 'base'}`;
+                        return (
                         <article
-                            key={item.slug}
+                            key={itemKey}
                             className="bg-card border border-border rounded-xl p-3 sm:p-4 flex gap-3 transition-all duration-200 hover:shadow-[0_4px_12px_rgba(61,26,26,0.08)]"
                         >
                             <div className="relative size-20 shrink-0 rounded-lg bg-background overflow-hidden">
@@ -47,6 +49,11 @@ export default function CartReviewStep() {
                                 </Link>
                                 <p className="text-xs text-foreground/70 mt-1">
                                     {item.category} • {item.size}
+                                    {item.variantLabel && (
+                                        <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-medium">
+                                            {item.variantLabel}
+                                        </span>
+                                    )}
                                 </p>
                                 <p className="text-sm font-semibold mt-2">
                                     {item.price.toLocaleString("id-ID", {
@@ -61,7 +68,7 @@ export default function CartReviewStep() {
                                         <button
                                             type="button"
                                             className="size-8 rounded-lg border border-border bg-card hover:bg-muted transition-colors flex items-center justify-center"
-                                            onClick={() => updateQuantity(item.slug, item.quantity - 1)}
+                                            onClick={() => updateQuantity(item.slug, item.quantity - 1, item.variantId)}
                                             aria-label={`Decrease ${item.name} quantity`}
                                         >
                                             −
@@ -70,7 +77,7 @@ export default function CartReviewStep() {
                                         <button
                                             type="button"
                                             className="size-8 rounded-lg border border-border bg-card hover:bg-muted transition-colors flex items-center justify-center"
-                                            onClick={() => updateQuantity(item.slug, item.quantity + 1)}
+                                            onClick={() => updateQuantity(item.slug, item.quantity + 1, item.variantId)}
                                             aria-label={`Increase ${item.name} quantity`}
                                         >
                                             +
@@ -79,14 +86,15 @@ export default function CartReviewStep() {
                                     <button
                                         type="button"
                                         className="text-xs text-destructive hover:underline"
-                                        onClick={() => removeItem(item.slug)}
+                                        onClick={() => removeItem(item.slug, item.variantId)}
                                     >
                                         Remove
                                     </button>
                                 </div>
                             </div>
                         </article>
-                    ))}
+                        );
+                    })}
 
                     <Link
                         href="/catalog"

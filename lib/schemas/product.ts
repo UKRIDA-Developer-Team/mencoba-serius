@@ -9,6 +9,7 @@ export const ProductSchema = z.object({
     image: z.string().default("/product/chocolate-cake.webp"),
     category: z.string().min(1, "Category is required"),
     size: z.string().min(1, "Size is required"),
+    tag: z.string().optional(),
 });
 
 export const CreateProductSchema = ProductSchema.omit({ id: true });

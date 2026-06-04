@@ -6,10 +6,11 @@ import { withAdminAuth } from "@/lib/auth/middleware";
 
 const patchHandler = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  payload: any,
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { isActive } = body;
 
@@ -56,16 +57,17 @@ const patchHandler = async (
 
 const putHandler = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  payload: any,
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
-    const { slug, name, category, basePrice, isCustomizable, isPreorderOnly } = body;
+    const { name, category, basePrice, isCustomizable, isPreorderOnly } = body;
 
-    if (!slug || !name || !category || basePrice === undefined) {
+    if (!name || !category || basePrice === undefined) {
       return NextResponse.json(
-        { success: false, message: "Field wajib: slug, name, category, basePrice" },
+        { success: false, message: "Field wajib: name, category, basePrice" },
         { status: 400 }
       );
     }
@@ -84,10 +86,15 @@ const putHandler = async (
       );
     }
 
+    const toSlug = (str: string) =>
+      str.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+    
+    const generatedSlug = toSlug(name);
+
     const result = await db
       .update(products)
       .set({
-        slug: slug.toLowerCase(),
+        slug: generatedSlug,
         name,
         categoryId: cat[0].id,
         basePrice: basePrice.toString(),
@@ -134,10 +141,11 @@ const putHandler = async (
 
 const deleteHandler = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  payload: any,
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const result = await db
       .delete(products)

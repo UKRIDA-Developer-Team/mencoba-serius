@@ -27,9 +27,9 @@ export function verifyAdminToken(request: NextRequest) {
  * Automatically checks JWT and returns 401 if invalid
  */
 export function withAdminAuth(
-  handler: (request: NextRequest, payload: any) => Promise<NextResponse>
+  handler: (request: NextRequest, payload: any, ...args: any[]) => Promise<NextResponse>
 ) {
-  return async (request: NextRequest) => {
+  return async (request: NextRequest, ...args: any[]) => {
     const payload = verifyAdminToken(request);
 
     if (!payload) {
@@ -39,6 +39,6 @@ export function withAdminAuth(
       );
     }
 
-    return handler(request, payload);
+    return handler(request, payload, ...args);
   };
 }
