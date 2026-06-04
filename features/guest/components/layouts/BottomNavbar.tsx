@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 const navigationItems = [
     { label: "Home", link: "/", icon: Home },
     { label: "Catalog", link: "/catalog", icon: BookOpen },
-    { label: "Admin", link: "/admin", icon: Shield },
 ];
 
 export default function BottomNavbar() {
