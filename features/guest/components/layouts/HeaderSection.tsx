@@ -11,7 +11,6 @@ import { useCart } from "@/features/guest/components/cart/CartProvider";
 const navLinks = [
     { label: "Beranda", href: "/", icon: Home },
     { label: "Katalog", href: "/catalog", icon: BookOpen },
-    { label: "Admin", href: "/admin", icon: Shield },
 ];
 
 export default function HeaderSection() {
