@@ -47,8 +47,8 @@ export default function AdminPage() {
 
       if (statsPayload.success) setChartStats(statsPayload.data);
       if (ordersPayload.success) setRecentOrders(ordersPayload.data.slice(0, 8));
-    } catch {
-      // silently fail charts
+    } catch (error) {
+      console.error("Failed to load dashboard stats:", error);
     } finally {
       setIsChartLoading(false);
     }

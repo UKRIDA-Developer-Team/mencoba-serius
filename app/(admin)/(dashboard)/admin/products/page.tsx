@@ -11,6 +11,7 @@ import {
   Search, Plus, ChevronDown, ChevronRight, Trash2, Edit3,
   Check, X, ScrollText, Package,
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Types
 type AdminProduct = {
@@ -379,16 +380,20 @@ export default function ProductsPage() {
               </div>
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Kategori</label>
-                <select
+                <Select
                   value={addForm.category}
-                  onChange={(e) => setAddForm((p) => ({ ...p, category: e.target.value }))}
-                  className="bg-card border border-border rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors"
+                  onValueChange={(value) => setAddForm((p) => ({ ...p, category: value }))}
                   required
                 >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name}>{cat.name}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full bg-card border-border rounded-lg px-3 text-sm focus:ring-accent/40 focus:border-accent transition-colors">
+                    <SelectValue placeholder="Pilih Kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Harga Dasar (Rp)</label>

@@ -5,6 +5,7 @@ import { authenticatedFetch } from "@/lib/auth/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, ShoppingCart, ChevronDown, ChevronRight, PackageOpen } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Toast from "@/features/admin/components/dashboard/toast";
 
 type OrderStatus = "DRAFT" | "CONFIRMED" | "IN_PRODUCTION" | "READY" | "COMPLETED" | "CANCELLED";
@@ -227,15 +228,19 @@ export default function OrdersPage() {
                       </div>
 
                       {/* Status Changer */}
-                      <select
-                        className="bg-card border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors min-w-[120px]"
+                      <Select
                         value={order.status}
-                        onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
+                        onValueChange={(value) => handleStatusChange(order.id, value as OrderStatus)}
                       >
-                        {ORDER_STATUSES.map((s) => (
-                          <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="bg-card border-border rounded-lg px-2 text-xs focus:ring-accent/40 focus:border-accent transition-colors min-w-[120px] h-8">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ORDER_STATUSES.map((s) => (
+                            <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 

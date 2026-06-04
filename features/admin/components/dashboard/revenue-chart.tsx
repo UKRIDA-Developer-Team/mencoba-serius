@@ -5,6 +5,7 @@
 // Displays revenue over the last 7 days using cubic bezier smooth paths.
 
 import { useId, useMemo, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -153,7 +154,7 @@ export default function RevenueChart({ data, range, onRangeChange }: RevenueChar
     // ── Render ───────────────────────────────────────────────────────────────
     return (
         <div
-            className="rounded-xl border border-border bg-card shadow-sm"
+            className="h-full rounded-xl border border-border bg-card shadow-sm flex flex-col"
             style={{ boxShadow: "0 4px 12px rgba(61,26,26,0.08)" }}
         >
             {/* Card header */}
@@ -173,25 +174,29 @@ export default function RevenueChart({ data, range, onRangeChange }: RevenueChar
                         )}
                     </div>
 
-                    <select
+                    <Select
                         value={range}
-                        onChange={(event) => onRangeChange(event.target.value as DashboardRange)}
-                        className="bg-card border border-border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors"
+                        onValueChange={(value) => onRangeChange(value as DashboardRange)}
                     >
-                        {RANGE_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </select>
+                        <SelectTrigger className="w-[140px] bg-card border-border rounded-lg px-3 py-1.5 text-xs focus:ring-accent/40 focus:border-accent transition-colors">
+                            <SelectValue placeholder="Pilih Range" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {RANGE_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 
             {/* Chart body */}
-            <div className="p-4">
+            <div className="p-4 flex-1">
                 {allZero ? (
                     /* Empty state */
-                    <div className="flex flex-col items-center justify-center h-40 text-muted-foreground gap-2">
+                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
                         <svg
                             width="40"
                             height="40"
