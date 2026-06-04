@@ -690,34 +690,35 @@ export default function InventoryIngredientsPage() {
 
                     {/* Actions */}
                     <TableCell className="text-right">
-                      <div className="flex items-center gap-1 justify-end">
+                      <div className="flex items-center gap-1.5 justify-end">
                     {editId === ingredient.id ? (
                       <>
-                        <button onClick={saveEdit} className="p-1 text-green-600 hover:text-green-700">
-                          <Check className="size-3.5" />
+                        <button onClick={saveEdit} className="h-7 px-2 flex items-center gap-1 rounded-md text-[11px] font-medium bg-green-50 text-green-700 hover:bg-green-100 transition-colors">
+                          <Check className="size-3.5" /> Simpan
                         </button>
-                        <button onClick={cancelEdit} className="p-1 text-muted-foreground hover:text-foreground">
+                        <button onClick={cancelEdit} className="size-7 flex justify-center items-center rounded-md border border-input text-muted-foreground hover:bg-accent/10 hover:text-accent transition-colors">
                           <X className="size-3.5" />
                         </button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => startEdit(ingredient)} className="p-1 text-muted-foreground hover:text-accent">
+                        <button onClick={() => startEdit(ingredient)} className="size-7 flex justify-center items-center rounded-md border border-input bg-background hover:bg-accent/10 hover:text-accent hover:border-accent/50 text-muted-foreground transition-all" title="Edit">
                           <Edit3 className="size-3.5" />
                         </button>
                         <button
                           onClick={() => toggleActive(ingredient)}
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                          className={`h-7 px-2 flex justify-center items-center rounded-md text-[10px] uppercase font-bold tracking-wider border transition-colors ${
                             ingredient.isActive
-                              ? "bg-[#7BAE8F]/15 text-[#7BAE8F]"
-                              : "bg-muted text-muted-foreground"
+                              ? "border-green-200 bg-green-50/50 text-green-700 hover:bg-green-100/50"
+                              : "border-input bg-muted/50 text-muted-foreground hover:bg-muted"
                           }`}
+                          title={ingredient.isActive ? "Nonaktifkan" : "Aktifkan"}
                         >
                           {ingredient.isActive ? "Aktif" : "Nonaktif"}
                         </button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <button className="p-1 text-muted-foreground hover:text-destructive">
+                            <button className="size-7 flex justify-center items-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Hapus">
                               <Trash2 className="size-3.5" />
                             </button>
                           </AlertDialogTrigger>

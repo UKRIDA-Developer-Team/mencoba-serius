@@ -93,14 +93,14 @@ export default function AdminPage() {
       {/* Charts Row */}
       {!isChartLoading && chartStats && (
         <div className="grid xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2">
+          <div className="xl:col-span-2 min-w-0">
             <RevenueChart
               data={chartStats.revenue}
               range={chartRange}
               onRangeChange={setChartRange}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <OrdersDonut data={chartStats.ordersByStatus} />
           </div>
         </div>
@@ -164,12 +164,12 @@ export default function AdminPage() {
 
       {/* Bottom Row: Recent Orders + Quick Links */}
       <div className="grid xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
+        <div className="xl:col-span-2 min-w-0">
           <RecentOrders orders={recentOrders} />
         </div>
 
         {/* Quick Nav */}
-        <div className="space-y-3">
+        <div className="space-y-3 min-w-0">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Akses Cepat
           </h2>
