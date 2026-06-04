@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { ingredients, products, productCategories, suppliers, measurementUnits, ingredientStockMovements } from "@/lib/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 
 export type AdminIngredient = {
   id: string;
@@ -86,31 +86,36 @@ export async function getAdminIngredients(): Promise<AdminIngredient[]> {
         isActive: ingredients.isActive,
         supplierName: suppliers.name,
         unitCode: measurementUnits.code,
+        currentStock: sql<number>`
+          GREATEST(0, COALESCE((
+            SELECT SUM(
+              CASE 
+                WHEN movement_type = 'IN' THEN quantity::numeric
+                WHEN movement_type = 'OUT' THEN -quantity::numeric
+                WHEN movement_type = 'ADJUSTMENT' THEN quantity::numeric
+                ELSE 0
+              END
+            )
+            FROM ingredient_stock_movements
+            WHERE ingredient_id = ingredients.id AND unit_id = ingredients.base_unit_id
+          ), 0))::numeric
+        `,
       })
       .from(ingredients)
       .leftJoin(suppliers, eq(ingredients.preferredSupplierId, suppliers.id))
       .leftJoin(measurementUnits, eq(ingredients.baseUnitId, measurementUnits.id))
       .orderBy(desc(ingredients.id));
 
-    // Map to admin format - calculate stock for each ingredient
-    const enriched: AdminIngredient[] = [];
-    for (const item of result) {
-      // Calculate stock from movements
-      const currentStock = await calculateIngredientStock(item.id, item.baseUnitId);
-
-      enriched.push({
-        id: item.id.toString(),
-        sku: item.sku,
-        name: item.name,
-        baseUnitCode: item.unitCode || "g",
-        reorderLevelBaseQty: Number(item.reorderLevelBaseQty),
-        currentStockBaseQty: currentStock,
-        preferredSupplier: item.supplierName || "Unknown",
-        isActive: item.isActive,
-      });
-    }
-
-    return enriched;
+    return result.map((item) => ({
+      id: item.id.toString(),
+      sku: item.sku,
+      name: item.name,
+      baseUnitCode: item.unitCode || "g",
+      reorderLevelBaseQty: Number(item.reorderLevelBaseQty),
+      currentStockBaseQty: Number(item.currentStock),
+      preferredSupplier: item.supplierName || "Unknown",
+      isActive: item.isActive,
+    }));
   } catch (error) {
     console.error("Error fetching admin ingredients:", error);
     return [];

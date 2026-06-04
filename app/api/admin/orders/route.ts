@@ -28,9 +28,13 @@ const generateOrderNumber = () => {
   return `SO-${date}-${time}-${randomSuffix}`;
 };
 
-const getHandler = async () => {
+const getHandler = async (request: NextRequest) => {
   try {
-    const result = await db
+    const url = new URL(request.url);
+    const limitParam = url.searchParams.get("limit");
+    const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+
+    let query = db
       .select({
         id: salesOrders.id,
         orderNumber: salesOrders.orderNumber,
@@ -42,7 +46,14 @@ const getHandler = async () => {
       })
       .from(salesOrders)
       .leftJoin(customers, eq(salesOrders.customerId, customers.id))
-      .orderBy(desc(salesOrders.orderedAt));
+      .orderBy(desc(salesOrders.orderedAt))
+      .$dynamic();
+
+    if (limit && !isNaN(limit)) {
+      query = query.limit(limit);
+    }
+
+    const result = await query;
 
     const orderIds = result.map((r) => r.id);
     

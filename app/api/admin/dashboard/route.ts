@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { withAdminAuth } from "@/lib/auth/middleware";
+import { getAdminIngredients, getAdminProducts } from "@/lib/data/admin";
 
 type DashboardRange =
   | "this_week"
@@ -183,12 +184,30 @@ const getHandler = async (request: NextRequest) => {
       };
     });
 
+    const [ingredients, products] = await Promise.all([
+      getAdminIngredients(),
+      getAdminProducts(),
+    ]);
+
+    const lowStockItems = ingredients
+      .filter((i) => i.currentStockBaseQty < i.reorderLevelBaseQty)
+      .sort((a, b) => a.currentStockBaseQty - b.currentStockBaseQty);
+
+    const inventoryStats = {
+      totalProducts: products.filter((p) => p.isActive).length,
+      totalIngredients: ingredients.length,
+      totalLowStock: lowStockItems.length,
+      totalPreorderOnly: products.filter((p) => p.isPreorderOnly && p.isActive).length,
+    };
+
     return NextResponse.json({
       success: true,
       data: {
         range,
         revenue: revenuePoints,
         ordersByStatus: statusSummary,
+        inventoryStats,
+        lowStockItems,
       },
     });
   } catch (error) {

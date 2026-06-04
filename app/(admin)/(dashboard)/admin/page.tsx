@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { authenticatedFetch } from "@/lib/auth/client";
-import { useAdminData, useAdminFilters, useAdminState } from "@/features/admin/hooks";
 import StatCards from "@/features/admin/components/dashboard/stat-cards";
 import RevenueChart, { type DashboardRange } from "@/features/admin/components/dashboard/revenue-chart";
 import OrdersDonut from "@/features/admin/components/dashboard/orders-donut";
@@ -14,6 +13,13 @@ type DashboardStats = {
   range: DashboardRange;
   revenue: { date: string; label?: string; revenue: number; orderCount: number }[];
   ordersByStatus: { status: string; count: number }[];
+  inventoryStats: {
+    totalProducts: number;
+    totalIngredients: number;
+    totalLowStock: number;
+    totalPreorderOnly: number;
+  };
+  lowStockItems: any[];
 };
 
 type RecentOrder = {
@@ -27,9 +33,6 @@ type RecentOrder = {
 };
 
 export default function AdminPage() {
-  const { ingredients: apiIngredients, products: apiProducts, isLoading } = useAdminData();
-  const { ingredients, products } = useAdminState(apiIngredients, apiProducts);
-  const { lowStockItems, stats } = useAdminFilters(ingredients, products, "", "");
 
   const [chartStats, setChartStats] = useState<DashboardStats | null>(null);
   const [chartRange, setChartRange] = useState<DashboardRange>("this_week");
@@ -40,13 +43,13 @@ export default function AdminPage() {
     try {
       const [statsRes, ordersRes] = await Promise.all([
         authenticatedFetch(`/api/admin/dashboard?range=${chartRange}`),
-        authenticatedFetch("/api/admin/orders"),
+        authenticatedFetch("/api/admin/orders?limit=8"),
       ]);
       const statsPayload = await statsRes.json();
       const ordersPayload = await ordersRes.json();
 
       if (statsPayload.success) setChartStats(statsPayload.data);
-      if (ordersPayload.success) setRecentOrders(ordersPayload.data.slice(0, 8));
+      if (ordersPayload.success) setRecentOrders(ordersPayload.data);
     } catch (error) {
       console.error("Failed to load dashboard stats:", error);
     } finally {
@@ -59,7 +62,7 @@ export default function AdminPage() {
     loadDashboardStats();
   }, [loadDashboardStats]);
 
-  if (isLoading) {
+  if (isChartLoading && !chartStats) {
     return (
       <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-12 pb-8">
         <div className="flex items-center justify-center h-64">
@@ -85,7 +88,7 @@ export default function AdminPage() {
       </div>
 
       {/* Stat Cards */}
-      <StatCards {...stats} />
+      {chartStats?.inventoryStats && <StatCards {...chartStats.inventoryStats} />}
 
       {/* Charts Row */}
       {!isChartLoading && chartStats && (
@@ -114,13 +117,13 @@ export default function AdminPage() {
       )}
 
       {/* Low Stock Alert */}
-      {lowStockItems.length > 0 && (
+      {chartStats?.lowStockItems && chartStats.lowStockItems.length > 0 && (
         <div className="rounded-xl border border-amber-200 bg-amber-50/60">
           <div className="flex items-center justify-between px-5 py-3 border-b border-amber-200">
             <div className="flex items-center gap-2">
               <AlertTriangle className="size-4 text-amber-600" />
               <h3 className="text-sm font-semibold text-amber-800">
-                Low Stock Alert — {lowStockItems.length} item
+                Low Stock Alert — {chartStats.lowStockItems.length} item
               </h3>
             </div>
             <Link
@@ -131,7 +134,7 @@ export default function AdminPage() {
             </Link>
           </div>
           <div className="divide-y divide-amber-100">
-            {lowStockItems.slice(0, 4).map((item) => (
+            {chartStats.lowStockItems.slice(0, 4).map((item) => (
               <div
                 key={item.sku}
                 className="flex items-center justify-between px-5 py-2.5 text-sm"
@@ -150,9 +153,9 @@ export default function AdminPage() {
                 </div>
               </div>
             ))}
-            {lowStockItems.length > 4 && (
+            {chartStats.lowStockItems.length > 4 && (
               <div className="px-5 py-2 text-xs text-amber-600 text-center">
-                +{lowStockItems.length - 4} item lainnya
+                +{chartStats.lowStockItems.length - 4} item lainnya
               </div>
             )}
           </div>
