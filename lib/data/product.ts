@@ -110,10 +110,7 @@ function getSeasonalCategory(): string {
 
 export async function getRecommendedProducts(): Promise<Product[]> {
     try {
-        const seasonalCat = getSeasonalCategory();
-
-        // 1. Try to get seasonal products
-        const seasonalProducts = await db
+        const recommendedProducts = await db
             .select({
                 id: products.id,
                 slug: products.slug,
@@ -129,56 +126,17 @@ export async function getRecommendedProducts(): Promise<Product[]> {
             .where(
                 and(
                     eq(products.isActive, true),
-                    eq(productCategories.name, seasonalCat)
+                    eq(products.isRecommended, true)
                 )
             )
             .orderBy(desc(products.id))
-            .limit(5)
+            .limit(10)
             .execute();
 
-        let results = seasonalProducts.map((row) => {
+        return recommendedProducts.map((row) => {
             const product = mapDbProductToProduct(row, row.categoryName || "");
-            return { ...product, tag: seasonalCat };
+            return { ...product, tag: "Rekomendasi" };
         });
-        console.log(`Found ${results.length} seasonal products for category "${seasonalCat}"`);
-
-        // 2. If we don't have enough, fill with "high sales" proxy (latest active products)
-        if (results.length < 5) {
-            const remaining = 5 - results.length;
-            const existingIds = results.map(r => BigInt(r.id));
-
-            const conditions = [eq(products.isActive, true)];
-            if (existingIds.length > 0) {
-                conditions.push(not(inArray(products.id, existingIds)));
-            }
-
-            const highSalesProxy = await db
-                .select({
-                    id: products.id,
-                    slug: products.slug,
-                    name: products.name,
-                    description: products.description,
-                    basePrice: products.basePrice,
-                    imagePath: products.imagePath,
-                    sizeLabel: products.sizeLabel,
-                    categoryName: productCategories.name,
-                })
-                .from(products)
-                .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
-                .where(and(...conditions))
-                .orderBy(desc(products.id)) // Proxy for high sales
-                .limit(remaining)
-                .execute();
-
-            const additionalProducts = highSalesProxy.map((row) => {
-                const product = mapDbProductToProduct(row, row.categoryName || "");
-                return { ...product, tag: "Best Seller" };
-            });
-
-            results = [...results, ...additionalProducts];
-        }
-
-        return results;
     } catch (error) {
         console.error("Error fetching recommended products:", error);
         return [];

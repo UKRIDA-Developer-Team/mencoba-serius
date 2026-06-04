@@ -6,18 +6,35 @@ import { authenticatedFetch } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Toast from "@/features/admin/components/dashboard/toast";
+import { toast } from "sonner";
 import {
   Search, Plus, ChevronDown, ChevronRight, Trash2, Edit3,
   Check, X, ScrollText, Package,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { Switch } from "@/components/ui/switch";
 
 // Types
 type AdminProduct = {
   id: string; slug: string; name: string; category: string;
+  description?: string | null; imagePath?: string | null;
   basePrice: number; sizeLabel: string; isCustomizable: boolean;
   isPreorderOnly: boolean; isActive: boolean;
+  isRecommended: boolean;
 };
 
 type ProductVariant = {
@@ -32,8 +49,11 @@ function formatIDR(value: number) {
   return `Rp\u00a0${value.toLocaleString("id-ID")}`;
 }
 
-// ─── Variant Panel ────────────────────────────────────────
-function VariantPanel({ productId, toast }: { productId: string; toast: (msg: string) => void }) {
+// ============================================================================
+// Variant Panel Component
+// Handles listing, adding, editing, and deleting product variants.
+// ============================================================================
+function VariantPanel({ productId }: { productId: string }) {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [form, setForm] = useState({ label: "", price: "" });
@@ -66,9 +86,9 @@ function VariantPanel({ productId, toast }: { productId: string; toast: (msg: st
       if (data.success) {
         setVariants((prev) => [...prev, data.data]);
         setForm({ label: "", price: "" });
-        toast("Varian ditambahkan");
+        toast.success("Varian ditambahkan");
       }
-    } catch { toast("Gagal menambah varian"); }
+    } catch { toast.error("Gagal menambah varian"); }
   };
 
   const saveEdit = async () => {
@@ -87,13 +107,12 @@ function VariantPanel({ productId, toast }: { productId: string; toast: (msg: st
       if (data.success) {
         setVariants((prev) => prev.map((v) => (v.id === editId ? { ...v, ...data.data } : v)));
         setEditId(null);
-        toast("Varian diperbarui");
+        toast.success("Varian diperbarui");
       }
-    } catch { toast("Gagal memperbarui varian"); }
+    } catch { toast.error("Gagal memperbarui varian"); }
   };
 
   const deleteVariant = async (variantId: string) => {
-    if (!confirm("Hapus varian ini?")) return;
     try {
       const res = await authenticatedFetch(`/api/admin/products/${productId}/variants`, {
         method: "DELETE",
@@ -103,9 +122,9 @@ function VariantPanel({ productId, toast }: { productId: string; toast: (msg: st
       const data = await res.json();
       if (data.success) {
         setVariants((prev) => prev.filter((v) => v.id !== variantId));
-        toast("Varian dihapus");
+        toast.success("Varian dihapus");
       }
-    } catch { toast("Gagal menghapus varian"); }
+    } catch { toast.error("Gagal menghapus varian"); }
   };
 
   if (isLoading) return <p className="text-xs text-muted-foreground py-2">Memuat varian...</p>;
@@ -146,9 +165,27 @@ function VariantPanel({ productId, toast }: { productId: string; toast: (msg: st
                   >
                     <Edit3 className="size-3" />
                   </button>
-                  <button onClick={() => deleteVariant(v.id)} className="text-muted-foreground hover:text-destructive">
-                    <Trash2 className="size-3" />
-                  </button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="size-3" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Varian?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Varian ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteVariant(v.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Hapus
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </>
               )}
             </div>
@@ -181,26 +218,26 @@ function VariantPanel({ productId, toast }: { productId: string; toast: (msg: st
   );
 }
 
-// ─── Main Products Page ───────────────────────────────────
+// ============================================================================
+// Main Products Page Component
+// Displays product list, handles creation, deletion, and status toggle.
+// ============================================================================
 export default function ProductsPage() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [toast, setToast] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [variantCounts, setVariantCounts] = useState<Record<string, number>>({});
 
   // Add form
-  const [addForm, setAddForm] = useState({ name: "", category: "", price: "" });
+  const [addForm, setAddForm] = useState({ name: "", category: "", price: "", description: "", imagePath: "", isRecommended: false });
 
   // Edit form
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<AdminProduct | null>(null);
 
-  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 2500); };
-
-  // Load data
+  // Edit form
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -216,13 +253,14 @@ export default function ProductsPage() {
         setAddForm((p) => p.category ? p : { ...p, category: catData.data[0]?.name || "" });
       }
     } catch {
-      showToast("Gagal memuat data");
+      toast.error("Gagal memuat data");
     } finally { setIsLoading(false); }
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Load variant counts
+  // Load variant counts asynchronously for each product to show in the list badge
+  // It fetches the variants per product and stores the length in a dictionary
   useEffect(() => {
     products.forEach(async (p) => {
       try {
@@ -248,7 +286,7 @@ export default function ProductsPage() {
     e.preventDefault();
     const price = Number(addForm.price);
     if (!addForm.name || !addForm.category || price <= 0) {
-      showToast("Lengkapi semua field");
+      toast.error("Lengkapi semua field");
       return;
     }
     try {
@@ -259,14 +297,17 @@ export default function ProductsPage() {
           name: addForm.name,
           category: addForm.category,
           basePrice: price,
+          description: addForm.description || null,
+          imagePath: addForm.imagePath || null,
+          isRecommended: addForm.isRecommended,
         }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error();
       setProducts((prev) => [data.data, ...prev]);
-      setAddForm({ name: "", category: categories[0]?.name || "", price: "" });
-      showToast("Produk ditambahkan!");
-    } catch { showToast("Gagal menambahkan produk"); }
+      setAddForm({ name: "", category: categories[0]?.name || "", price: "", description: "", imagePath: "", isRecommended: false });
+      toast.success("Produk ditambahkan!");
+    } catch { toast.error("Gagal menambahkan produk"); }
   };
 
   // Toggle active
@@ -278,20 +319,33 @@ export default function ProductsPage() {
         body: JSON.stringify({ isActive: !product.isActive }),
       });
       if (!res.ok) throw new Error();
-      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, isActive: !p.isActive } : p)));
-      showToast(product.isActive ? "Produk dinonaktifkan" : "Produk diaktifkan");
-    } catch { showToast("Gagal mengupdate produk"); }
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, isActive: !product.isActive } : p)));
+      toast.success(product.isActive ? "Produk dinonaktifkan" : "Produk diaktifkan");
+    } catch { toast.error("Gagal mengupdate produk"); }
+  };
+
+  // Toggle recommended
+  const toggleRecommended = async (product: AdminProduct) => {
+    try {
+      const res = await authenticatedFetch(`/api/admin/products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isRecommended: !product.isRecommended }),
+      });
+      if (!res.ok) throw new Error();
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, isRecommended: !product.isRecommended } : p)));
+      toast.success(product.isRecommended ? "Dihapus dari rekomendasi" : "Ditambahkan ke rekomendasi");
+    } catch { toast.error("Gagal mengupdate produk"); }
   };
 
   // Delete
   const deleteProduct = async (id: string) => {
-    if (!confirm("Yakin hapus produk ini?")) return;
     try {
       const res = await authenticatedFetch(`/api/admin/products/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       setProducts((prev) => prev.filter((p) => p.id !== id));
-      showToast("Produk dihapus!");
-    } catch { showToast("Gagal menghapus produk"); }
+      toast.success("Produk dihapus!");
+    } catch { toast.error("Gagal menghapus produk"); }
   };
 
   // Edit
@@ -308,14 +362,17 @@ export default function ProductsPage() {
           name: editForm.name,
           category: editForm.category,
           basePrice: editForm.basePrice,
+          description: editForm.description || null,
+          imagePath: editForm.imagePath || null,
+          isRecommended: editForm.isRecommended,
         }),
       });
       if (!res.ok) throw new Error();
       const updatedData = await res.json();
       setProducts((prev) => prev.map((p) => (p.id === editId ? updatedData.data : p)));
-      showToast("Produk diperbarui!");
+      toast.success("Produk diperbarui!");
       cancelEdit();
-    } catch { showToast("Gagal memperbarui produk"); }
+    } catch { toast.error("Gagal memperbarui produk"); }
   };
 
   if (isLoading) {
@@ -407,6 +464,30 @@ export default function ProductsPage() {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Deskripsi</label>
+                <Textarea
+                  value={addForm.description}
+                  onChange={(e) => setAddForm((p) => ({ ...p, description: e.target.value }))}
+                  placeholder="Deskripsi produk..."
+                  className="bg-card border-border rounded-lg resize-none"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Gambar Produk</label>
+                <ImageUpload
+                  value={addForm.imagePath}
+                  onChange={(url) => setAddForm((p) => ({ ...p, imagePath: url || "" }))}
+                />
+              </div>
+              <div className="flex items-center justify-between px-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground">Jadikan Rekomendasi?</label>
+                <Switch
+                  checked={addForm.isRecommended}
+                  onCheckedChange={(checked) => setAddForm((p) => ({ ...p, isRecommended: checked }))}
+                />
+              </div>
               <Button type="submit" className="w-full gap-1">
                 <Plus className="size-4" /> Tambah Produk
               </Button>
@@ -456,18 +537,42 @@ export default function ProductsPage() {
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         {editId === product.id && editForm ? (
-                          <div className="grid sm:grid-cols-2 gap-2">
-                            <Input
-                              value={editForm.name}
-                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                              className="text-sm bg-card border-border rounded-lg"
+                          <div className="flex flex-col gap-3">
+                            <div className="grid sm:grid-cols-2 gap-2">
+                              <Input
+                                value={editForm.name}
+                                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                className="text-sm bg-card border-border rounded-lg"
+                                placeholder="Nama produk"
+                              />
+                              <Input
+                                value={editForm.basePrice}
+                                onChange={(e) => setEditForm({ ...editForm, basePrice: Number(e.target.value) })}
+                                type="number"
+                                className="text-sm bg-card border-border rounded-lg"
+                                placeholder="Harga dasar"
+                              />
+                            </div>
+                            <Textarea
+                              value={editForm.description || ""}
+                              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                              placeholder="Deskripsi produk..."
+                              className="bg-card border-border rounded-lg resize-none text-sm"
+                              rows={2}
                             />
-                            <Input
-                              value={editForm.basePrice}
-                              onChange={(e) => setEditForm({ ...editForm, basePrice: Number(e.target.value) })}
-                              type="number"
-                              className="text-sm bg-card border-border rounded-lg"
-                            />
+                            <div className="w-full sm:w-1/2">
+                              <ImageUpload
+                                value={editForm.imagePath || null}
+                                onChange={(url) => setEditForm({ ...editForm, imagePath: url })}
+                              />
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Switch
+                                checked={editForm.isRecommended}
+                                onCheckedChange={(checked) => setEditForm({ ...editForm, isRecommended: checked })}
+                              />
+                              <label className="text-sm font-medium text-foreground">Jadikan Rekomendasi</label>
+                            </div>
                           </div>
                         ) : (
                           <>
@@ -500,6 +605,14 @@ export default function ProductsPage() {
                           </>
                         ) : (
                           <>
+                            <div className="flex items-center gap-1.5 mr-2">
+                              <Switch
+                                checked={product.isRecommended}
+                                onCheckedChange={() => toggleRecommended(product)}
+                                className="scale-75 data-[state=checked]:bg-amber-500"
+                              />
+                              <span className="text-[10px] font-semibold text-muted-foreground hidden sm:inline">Rekomendasi</span>
+                            </div>
                             <Link
                               href={`/admin/products/recipe/${product.slug}`}
                               className="flex items-center gap-1 h-7 px-2 rounded-md text-xs text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
@@ -519,9 +632,27 @@ export default function ProductsPage() {
                             >
                               {product.isActive ? "Aktif" : "Nonaktif"}
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={() => deleteProduct(product.id)} className="h-7 text-xs text-muted-foreground hover:text-destructive">
-                              <Trash2 className="size-3" />
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground hover:text-destructive">
+                                  <Trash2 className="size-3" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Hapus Produk?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Produk ini akan dihapus permanen beserta seluruh varian dan resepnya. Aksi ini tidak dapat dibatalkan.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteProduct(product.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                    Hapus
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </>
                         )}
                       </div>
@@ -533,7 +664,7 @@ export default function ProductsPage() {
                         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                           Varian Produk
                         </p>
-                        <VariantPanel productId={product.id} toast={showToast} />
+                        <VariantPanel productId={product.id} />
                       </div>
                     )}
                   </div>
@@ -543,8 +674,6 @@ export default function ProductsPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Toast message={toast} />
     </section>
   );
 }

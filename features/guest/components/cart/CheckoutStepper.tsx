@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { useCheckout, STEP_LABELS, type CheckoutStep } from "./CheckoutProvider";
 import { Check } from "lucide-react";
 
@@ -7,22 +8,33 @@ const STEPS: CheckoutStep[] = [1, 2, 3, 4];
 
 export default function CheckoutStepper() {
     const { currentStep, completedSteps, goToStep } = useCheckout();
+    const stepCircleSize = "clamp(2.25rem, 2vw + 1.5rem, 2.75rem)";
 
     return (
         <nav
             aria-label="Checkout progress"
             className="w-full mb-8"
+            style={{
+                ["--step-circle-size" as never]: stepCircleSize,
+            }}
         >
-            <ol className="flex items-center justify-between relative">
+            <ol className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)_auto] items-start">
                 {STEPS.map((step, index) => {
                     const isCompleted = completedSteps.has(step);
                     const isActive = step === currentStep;
                     const isClickable = isCompleted || step < currentStep;
+                    const isLastStep = index === STEPS.length - 1;
 
                     return (
+                        <Fragment key={step}>
                         <li
-                            key={step}
-                            className="flex flex-1 items-center"
+                            className={
+                                index === 0
+                                    ? "justify-self-start"
+                                    : isLastStep
+                                        ? "justify-self-end"
+                                        : "justify-self-center"
+                            }
                         >
                             {/* Step circle + label group */}
                             <div className="flex flex-col items-center relative z-10">
@@ -46,6 +58,10 @@ export default function CheckoutStepper() {
                                             : "cursor-default"
                                         }
                                     `}
+                                    style={{
+                                        width: "var(--step-circle-size)",
+                                        height: "var(--step-circle-size)",
+                                    }}
                                 >
                                     {isCompleted ? (
                                         <Check className="size-4 sm:size-5" strokeWidth={2.5} />
@@ -79,22 +95,23 @@ export default function CheckoutStepper() {
                                 )}
                             </div>
 
-                            {/* Connecting line */}
-                            {index < STEPS.length - 1 && (
-                                <div className="flex-1 h-0.5 mx-1 sm:mx-2 relative self-start mt-[18px] sm:mt-5">
-                                    {/* Background line */}
-                                    <div className="absolute inset-0 bg-border rounded-full" />
-                                    {/* Progress fill */}
-                                    <div
-                                        className={`
-                                            absolute inset-y-0 left-0 rounded-full
-                                            transition-all duration-500 ease-in-out
-                                            ${isCompleted ? "w-full bg-[#7BAE8F]" : "w-0 bg-accent"}
-                                        `}
-                                    />
-                                </div>
-                            )}
                         </li>
+
+                        {!isLastStep && (
+                            <li className="relative h-0.5 self-start mx-1 sm:mx-2" style={{ marginTop: "calc((var(--step-circle-size) / 2) - 1px)" }}>
+                                {/* Background line */}
+                                <div className="absolute inset-0 bg-border rounded-full" />
+                                {/* Progress fill */}
+                                <div
+                                    className={`
+                                        absolute inset-y-0 left-0 rounded-full
+                                        transition-all duration-500 ease-in-out
+                                        ${isCompleted ? "w-full bg-[#7BAE8F]" : "w-0 bg-accent"}
+                                    `}
+                                />
+                            </li>
+                        )}
+                        </Fragment>
                     );
                 })}
             </ol>

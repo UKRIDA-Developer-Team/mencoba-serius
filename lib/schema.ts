@@ -120,6 +120,7 @@ export const products = pgTable("products", {
   sizeLabel: text("size_label"),
   imagePath: text("image_path"),
   isActive: boolean("is_active").notNull().default(true),
+  isRecommended: boolean("is_recommended").notNull().default(false),
   isCustomizable: boolean("is_customizable").notNull().default(false),
   isPreorderOnly: boolean("is_preorder_only").notNull().default(false),
   defaultLeadTimeDays: integer("default_lead_time_days")

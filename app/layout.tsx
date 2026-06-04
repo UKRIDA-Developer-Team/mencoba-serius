@@ -3,6 +3,7 @@ import "./globals.css";
 import React from "react";
 import { jakartaSans } from "@/lib/fonts";
 import { CartProvider } from "@/features/guest/components/cart/CartProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Chef On Pointe - Kue Custom & Pastry Artisan",
@@ -30,6 +31,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
         </CartProvider>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

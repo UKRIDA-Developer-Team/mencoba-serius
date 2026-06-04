@@ -24,7 +24,7 @@ const getHandler = async (request: NextRequest) => {
 const postHandler = async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { name, category, basePrice } = body;
+    const { name, category, basePrice, description, imagePath, isRecommended } = body;
 
     if (!name || !category || basePrice === undefined) {
       return NextResponse.json(
@@ -61,9 +61,12 @@ const postHandler = async (request: NextRequest) => {
         name,
         categoryId: cat[0].id,
         basePrice: basePrice.toString(),
+        description: description || null,
+        imagePath: imagePath || null,
         isActive: true,
         isCustomizable: false,
         isPreorderOnly: false,
+        isRecommended: isRecommended ?? false,
         defaultLeadTimeDays: 0,
       })
       .returning();
@@ -78,9 +81,12 @@ const postHandler = async (request: NextRequest) => {
           name: result[0].name,
           category,
           basePrice: Number(result[0].basePrice),
+          description: result[0].description,
+          imagePath: result[0].imagePath,
           sizeLabel: result[0].sizeLabel || "",
           isCustomizable: result[0].isCustomizable,
           isPreorderOnly: result[0].isPreorderOnly,
+          isRecommended: result[0].isRecommended,
           isActive: result[0].isActive,
         },
       },

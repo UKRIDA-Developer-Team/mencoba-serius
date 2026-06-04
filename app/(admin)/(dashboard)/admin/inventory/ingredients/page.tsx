@@ -3,10 +3,29 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { authenticatedFetch } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Toast from "@/features/admin/components/dashboard/toast";
+import { toast } from "sonner";
 import { Search, Plus, Edit3, Check, X, Trash2, Package, Scale, Truck } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Ingredient = {
   id: string;
@@ -60,7 +79,6 @@ export default function InventoryIngredientsPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [toast, setToast] = useState("");
   const [form, setForm] = useState({ name: "", reorder: "", baseUnitId: "", supplierId: "" });
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: "", reorder: "", baseUnitId: "", supplierId: "" });
@@ -75,10 +93,7 @@ export default function InventoryIngredientsPage() {
   const [supplierForm, setSupplierForm] = useState({ name: "", contactName: "", phone: "" });
   const [isAddingSupplier, setIsAddingSupplier] = useState(false);
 
-  const showToast = (message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(""), 2500);
-  };
+  // Removed showToast
 
   const loadData = useCallback(async () => {
     try {
@@ -106,7 +121,7 @@ export default function InventoryIngredientsPage() {
         setSuppliers(supplierPayload.data);
       }
     } catch {
-      showToast("Gagal memuat data");
+      toast.error("Gagal memuat data");
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +143,7 @@ export default function InventoryIngredientsPage() {
     event.preventDefault();
     const reorder = Number(form.reorder || 0);
     if (!form.name || !form.baseUnitId || reorder < 0) {
-      showToast("Data ingredient tidak valid");
+      toast.error("Data ingredient tidak valid");
       return;
     }
 
@@ -149,16 +164,16 @@ export default function InventoryIngredientsPage() {
 
       setIngredients((prev) => [payload.data, ...prev]);
       setForm({ name: "", reorder: "", baseUnitId: units.length > 0 ? units[0].id.toString() : "", supplierId: "" });
-      showToast("Ingredient ditambahkan");
+      toast.success("Ingredient ditambahkan");
     } catch {
-      showToast("Gagal menambahkan ingredient");
+      toast.error("Gagal menambahkan ingredient");
     }
   };
 
   const handleAddUnit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!unitForm.code.trim() || !unitForm.name.trim()) {
-      showToast("Kode dan nama unit wajib diisi");
+      toast.error("Kode dan nama unit wajib diisi");
       return;
     }
 
@@ -176,7 +191,7 @@ export default function InventoryIngredientsPage() {
 
       const payload = await response.json();
       if (!response.ok || !payload.success) {
-        showToast(payload.message || "Gagal menambahkan unit");
+        toast.error(payload.message || "Gagal menambahkan unit");
         return;
       }
 
@@ -185,9 +200,9 @@ export default function InventoryIngredientsPage() {
       setForm((prev) => ({ ...prev, baseUnitId: newUnit.id }));
       setUnitForm({ code: "", name: "", unitType: "mass" });
       setShowNewUnit(false);
-      showToast(`Unit "${newUnit.code}" berhasil ditambahkan`);
+      toast.success(`Unit "${newUnit.code}" berhasil ditambahkan`);
     } catch {
-      showToast("Gagal menambahkan unit");
+      toast.error("Gagal menambahkan unit");
     } finally {
       setIsAddingUnit(false);
     }
@@ -196,7 +211,7 @@ export default function InventoryIngredientsPage() {
   const handleAddSupplier = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!supplierForm.name.trim()) {
-      showToast("Nama supplier wajib diisi");
+      toast.error("Nama supplier wajib diisi");
       return;
     }
 
@@ -214,7 +229,7 @@ export default function InventoryIngredientsPage() {
 
       const payload = await response.json();
       if (!response.ok || !payload.success) {
-        showToast(payload.message || "Gagal menambahkan supplier");
+        toast.error(payload.message || "Gagal menambahkan supplier");
         return;
       }
 
@@ -223,9 +238,9 @@ export default function InventoryIngredientsPage() {
       setForm((prev) => ({ ...prev, supplierId: newSupplier.id }));
       setSupplierForm({ name: "", contactName: "", phone: "" });
       setShowNewSupplier(false);
-      showToast(`Supplier "${newSupplier.name}" berhasil ditambahkan`);
+      toast.success(`Supplier "${newSupplier.name}" berhasil ditambahkan`);
     } catch {
-      showToast("Gagal menambahkan supplier");
+      toast.error("Gagal menambahkan supplier");
     } finally {
       setIsAddingSupplier(false);
     }
@@ -270,9 +285,9 @@ export default function InventoryIngredientsPage() {
 
       setIngredients((prev) => prev.map((item) => (item.id === editId ? payload.data : item)));
       cancelEdit();
-      showToast("Ingredient diperbarui");
+      toast.success("Ingredient diperbarui");
     } catch {
-      showToast("Gagal memperbarui ingredient");
+      toast.error("Gagal memperbarui ingredient");
     }
   };
 
@@ -292,29 +307,25 @@ export default function InventoryIngredientsPage() {
           item.id === ingredient.id ? { ...item, isActive: !item.isActive } : item
         )
       );
-      showToast("Status ingredient diperbarui");
+      toast.success("Status ingredient diperbarui");
     } catch {
-      showToast("Gagal memperbarui status");
+      toast.error("Gagal memperbarui status");
     }
   };
 
   const removeIngredient = async (id: string) => {
-    if (!confirm("Hapus ingredient ini?")) return;
-
     try {
       const response = await authenticatedFetch("/api/admin/ingredients", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
-
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error();
-
       setIngredients((prev) => prev.filter((item) => item.id !== id));
-      showToast("Ingredient dihapus");
+      toast.success("Ingredient dihapus");
     } catch {
-      showToast("Gagal menghapus ingredient");
+      toast.error("Gagal menghapus ingredient");
     }
   };
 
@@ -598,25 +609,24 @@ export default function InventoryIngredientsPage() {
               <p className="text-sm">Belum ada ingredient.</p>
             </div>
           ) : (
-            <div className="space-y-1.5">
-              {/* Table Header */}
-              <div className="grid grid-cols-[1fr_100px_120px_80px_auto] gap-3 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/40 rounded-lg">
-                <span>Ingredient</span>
-                <span>Stok</span>
-                <span>Supplier</span>
-                <span>Level</span>
-                <span className="text-right">Aksi</span>
-              </div>
-
-              {filteredIngredients.map((ingredient) => (
-                <div
-                  key={ingredient.id}
-                  className={`grid grid-cols-[1fr_100px_120px_80px_auto] gap-3 items-center px-4 py-2.5 rounded-lg border transition-colors ${
-                    ingredient.isActive ? "border-border bg-card" : "border-border/50 bg-muted/20"
-                  }`}
-                >
-                  {/* Name / Edit */}
-                  <div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ingredient</TableHead>
+                  <TableHead>Stok</TableHead>
+                  <TableHead>Supplier</TableHead>
+                  <TableHead>Level</TableHead>
+                  <TableHead className="text-right">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredIngredients.map((ingredient) => (
+                  <TableRow
+                    key={ingredient.id}
+                    className={!ingredient.isActive ? "bg-muted/20 opacity-75" : ""}
+                  >
+                    {/* Name / Edit */}
+                    <TableCell>
                     {editId === ingredient.id ? (
                       <div className="space-y-1.5">
                         <div className="flex gap-2">
@@ -660,26 +670,27 @@ export default function InventoryIngredientsPage() {
                         <p className="text-sm font-medium">{ingredient.name}</p>
                       </>
                     )}
-                  </div>
+                    </TableCell>
 
-                  {/* Stock */}
-                  <div>
+                    {/* Stock */}
+                    <TableCell>
                     <p className="text-sm tabular-nums">
                       {ingredient.currentStockBaseQty} {ingredient.baseUnitCode}
                     </p>
                     <StockIndicator current={ingredient.currentStockBaseQty} reorder={ingredient.reorderLevelBaseQty} />
-                  </div>
+                    </TableCell>
 
-                  {/* Supplier */}
-                  <p className="text-xs text-muted-foreground truncate">{ingredient.preferredSupplier || "—"}</p>
+                    {/* Supplier */}
+                    <TableCell className="text-muted-foreground truncate max-w-[120px]">{ingredient.preferredSupplier || "—"}</TableCell>
 
-                  {/* Reorder */}
-                  <p className="text-xs text-muted-foreground tabular-nums">
-                    {ingredient.reorderLevelBaseQty} {ingredient.baseUnitCode}
-                  </p>
+                    {/* Reorder */}
+                    <TableCell className="text-muted-foreground tabular-nums">
+                      {ingredient.reorderLevelBaseQty} {ingredient.baseUnitCode}
+                    </TableCell>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 justify-end">
+                    {/* Actions */}
+                    <TableCell className="text-right">
+                      <div className="flex items-center gap-1 justify-end">
                     {editId === ingredient.id ? (
                       <>
                         <button onClick={saveEdit} className="p-1 text-green-600 hover:text-green-700">
@@ -704,20 +715,39 @@ export default function InventoryIngredientsPage() {
                         >
                           {ingredient.isActive ? "Aktif" : "Nonaktif"}
                         </button>
-                        <button onClick={() => removeIngredient(ingredient.id)} className="p-1 text-muted-foreground hover:text-destructive">
-                          <Trash2 className="size-3.5" />
-                        </button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button className="p-1 text-muted-foreground hover:text-destructive">
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Hapus Ingredient?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Ingredient ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Batal</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => removeIngredient(ingredient.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                Hapus
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </>
                     )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
 
-      <Toast message={toast} />
     </section>
   );
 }

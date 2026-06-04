@@ -1,13 +1,14 @@
 "use client";
 
-// ─── Revenue Chart ────────────────────────────────────────────────────────────
-// Pure SVG line/area chart — no external charting library.
+// ============================================================================
+// Revenue Chart
+// Pure SVG line/area chart without external charting libraries.
 // Displays revenue over the last 7 days using cubic bezier smooth paths.
 
 import { useId, useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// --- Types ---
 
 type DataPoint = {
     date: string;
@@ -30,7 +31,7 @@ type RevenueChartProps = {
     onRangeChange: (range: DashboardRange) => void;
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helper Functions ---
 
 /** Format a revenue number into short Indonesian currency (150k, 1.5jt, etc.) */
 function formatShort(value: number): string {
@@ -78,7 +79,7 @@ function smoothPath(points: Array<[number, number]>): string {
     return d;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// --- Main Component ---
 
 const RANGE_OPTIONS: Array<{ value: DashboardRange; label: string }> = [
     { value: "this_week", label: "Minggu ini" },
@@ -100,7 +101,7 @@ export default function RevenueChart({ data, range, onRangeChange }: RevenueChar
         [points]
     );
 
-    // ── Chart geometry constants ─────────────────────────────────────────────
+    // --- Chart Geometry ---
     const SVG_W = 600;
     const SVG_H = 220;
     const PAD_TOP = 20;
@@ -111,7 +112,7 @@ export default function RevenueChart({ data, range, onRangeChange }: RevenueChar
     const chartW = SVG_W - PAD_LEFT - PAD_RIGHT;
     const chartH = SVG_H - PAD_TOP - PAD_BOTTOM;
 
-    // ── Scale helpers ────────────────────────────────────────────────────────
+    // --- Scaling Helpers ---
     const maxRevenue = useMemo(
         () => Math.max(...points.map((d) => d.revenue), 1),
         [points]
@@ -151,11 +152,10 @@ export default function RevenueChart({ data, range, onRangeChange }: RevenueChar
             ? `${linePath} L ${coords[coords.length - 1][0]},${PAD_TOP + chartH} L ${coords[0][0]},${PAD_TOP + chartH} Z`
             : "";
 
-    // ── Render ───────────────────────────────────────────────────────────────
+    // --- Render ---
     return (
         <div
-            className="h-full rounded-xl border border-border bg-card shadow-sm flex flex-col"
-            style={{ boxShadow: "0 4px 12px rgba(61,26,26,0.08)" }}
+            className="h-full rounded-xl border border-border bg-card flex flex-col"
         >
             {/* Card header */}
             <div className="px-5 pt-5 pb-3 border-b border-border">
@@ -353,7 +353,13 @@ export default function RevenueChart({ data, range, onRangeChange }: RevenueChar
                                             let tx = cx - TW / 2;
                                             if (tx < PAD_LEFT) tx = PAD_LEFT;
                                             if (tx + TW > SVG_W - PAD_RIGHT) tx = SVG_W - PAD_RIGHT - TW;
-                                            const ty = cy - TH - TP;
+                                            
+                                            // Position Y above the point
+                                            let ty = cy - TH - TP;
+                                            // If it overflows the top, flip it below the point
+                                            if (ty < PAD_TOP) {
+                                                ty = cy + TP;
+                                            }
 
                                             return (
                                                 <g style={{ pointerEvents: "none" }}>

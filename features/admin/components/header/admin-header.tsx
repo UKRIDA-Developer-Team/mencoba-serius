@@ -30,9 +30,10 @@ export default function AdminHeader() {
             <Link
                 href="/"
                 target="_blank"
-                className="inline-flex size-8 items-center justify-center rounded-md border border-border text-foreground/70 hover:bg-muted hover:text-foreground transition-colors"
+                className="inline-flex h-8 items-center gap-2 px-3 justify-center rounded-md border border-border text-xs font-medium text-foreground/80 hover:bg-muted transition-colors"
                 title="View public site"
             >
+                View Public Site
                 <Globe className="size-4" />
             </Link>
         </header>

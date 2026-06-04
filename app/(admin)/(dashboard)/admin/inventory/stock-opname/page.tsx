@@ -5,8 +5,16 @@ import { authenticatedFetch } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Toast from "@/features/admin/components/dashboard/toast";
+import { toast } from "sonner";
 import { Plus, ClipboardList } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Movement = {
   id: string;
@@ -31,7 +39,6 @@ export default function StockOpnamePage() {
   const [movements, setMovements] = useState<Movement[]>([]);
   const [ingredientOptions, setIngredientOptions] = useState<IngredientOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState("");
 
   const [form, setForm] = useState({
     ingredientId: "",
@@ -40,10 +47,7 @@ export default function StockOpnamePage() {
     notes: "",
   });
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 2500);
-  };
+  // Removed showToast
 
   const loadData = useCallback(async () => {
     try {
@@ -55,7 +59,7 @@ export default function StockOpnamePage() {
         setIngredientOptions(payload.options.ingredients);
       }
     } catch {
-      showToast("Gagal memuat data");
+      toast.error("Gagal memuat data");
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +83,7 @@ export default function StockOpnamePage() {
     e.preventDefault();
     const qty = Number(form.quantity);
     if (!form.ingredientId || !form.unitId || qty === 0 || !Number.isFinite(qty)) {
-      showToast("Lengkapi form — qty tidak boleh 0");
+      toast.error("Lengkapi form — qty tidak boleh 0");
       return;
     }
 
@@ -101,9 +105,9 @@ export default function StockOpnamePage() {
       // Refresh data to get updated info
       await loadData();
       setForm({ ingredientId: "", unitId: "", quantity: "", notes: "" });
-      showToast("Stock opname berhasil dicatat");
+      toast.success("Stock opname berhasil dicatat");
     } catch {
-      showToast("Gagal menyimpan stock opname");
+      toast.error("Gagal menyimpan stock opname");
     }
   };
 
@@ -219,44 +223,42 @@ export default function StockOpnamePage() {
               <p className="text-sm">Belum ada penyesuaian tercatat.</p>
             </div>
           ) : (
-            <div className="space-y-1.5">
-              {/* Header */}
-              <div className="grid grid-cols-[1fr_100px_80px_1fr] gap-3 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/40 rounded-lg">
-                <span>Ingredient</span>
-                <span>Qty</span>
-                <span>Unit</span>
-                <span>Tanggal & Catatan</span>
-              </div>
-
-              {movements.map((mv) => (
-                <div
-                  key={mv.id}
-                  className="grid grid-cols-[1fr_100px_80px_1fr] gap-3 items-center px-4 py-2.5 rounded-lg border border-border bg-card"
-                >
-                  <p className="text-sm font-medium truncate">{mv.ingredientName}</p>
-                  <p className={`text-sm font-semibold tabular-nums ${
-                    mv.quantity > 0 ? "text-[#7BAE8F]" : "text-[#C0646C]"
-                  }`}>
-                    {mv.quantity > 0 ? "+" : ""}{mv.quantity}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{mv.unitCode}</p>
-                  <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(mv.movementAt).toLocaleDateString("id-ID", {
-                        day: "2-digit", month: "short", year: "numeric",
-                        hour: "2-digit", minute: "2-digit",
-                      })}
-                    </p>
-                    {mv.notes && <p className="text-xs text-muted-foreground/70 truncate">{mv.notes}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ingredient</TableHead>
+                  <TableHead>Qty</TableHead>
+                  <TableHead>Unit</TableHead>
+                  <TableHead>Tanggal & Catatan</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {movements.map((mv) => (
+                  <TableRow key={mv.id}>
+                    <TableCell className="font-medium">{mv.ingredientName}</TableCell>
+                    <TableCell className={`font-semibold tabular-nums ${
+                      mv.quantity > 0 ? "text-[#7BAE8F]" : "text-[#C0646C]"
+                    }`}>
+                      {mv.quantity > 0 ? "+" : ""}{mv.quantity}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{mv.unitCode}</TableCell>
+                    <TableCell>
+                      <p className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(mv.movementAt).toLocaleDateString("id-ID", {
+                          day: "2-digit", month: "short", year: "numeric",
+                          hour: "2-digit", minute: "2-digit",
+                        })}
+                      </p>
+                      {mv.notes && <p className="text-xs text-muted-foreground/70">{mv.notes}</p>}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
 
-      <Toast message={toast} />
     </section>
   );
 }

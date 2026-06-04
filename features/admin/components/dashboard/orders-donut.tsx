@@ -1,11 +1,14 @@
 "use client";
 
-// ─── Orders Donut Chart ───────────────────────────────────────────────────────
-// Pure SVG donut chart showing order count by status — no external libraries.
+// ============================================================================
+// Orders Donut Chart
+// Pure SVG donut chart showing order count by status without external libraries.
+// ============================================================================
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// --- Types ---
 
 type DonutDataPoint = {
     status: string;
@@ -16,7 +19,7 @@ type OrdersDonutProps = {
     data: Array<DonutDataPoint>;
 };
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// --- Constants ---
 
 /** Brand-consistent color per order status */
 const STATUS_COLORS: Record<string, string> = {
@@ -38,7 +41,7 @@ const STATUS_LABELS: Record<string, string> = {
     CANCELLED: "Dibatalkan",
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helper Functions ---
 
 /**
  * Convert polar coordinates to Cartesian (SVG coordinate system).
@@ -86,9 +89,10 @@ function arcPath(
     ].join(" ");
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// --- Main Component ---
 
 export default function OrdersDonut({ data }: OrdersDonutProps) {
+    const [hoveredStatus, setHoveredStatus] = useState<string | null>(null);
     const total = useMemo(() => data.reduce((s, d) => s + d.count, 0), [data]);
 
     const allZero = total === 0;
@@ -99,7 +103,6 @@ export default function OrdersDonut({ data }: OrdersDonutProps) {
         [data]
     );
 
-    // Pre-compute arc start/end angles for each slice
     const slices = useMemo(() => {
         let cursor = 0;
         return activeSlices.map((d) => {
@@ -111,19 +114,27 @@ export default function OrdersDonut({ data }: OrdersDonutProps) {
         });
     }, [activeSlices, total]);
 
-    // ── Geometry ─────────────────────────────────────────────────────────────
-    const CX = 80;
-    const CY = 80;
-    const OUTER_R = 68;
-    const INNER_R = 37; // ~55% of 68 ≈ 37.4
+    const activeSlice = useMemo(
+        () => (hoveredStatus ? slices.find((s) => s.status === hoveredStatus) : null),
+        [hoveredStatus, slices]
+    );
 
-    const SVG_SIZE = 160;
+    const centerValue = activeSlice ? activeSlice.count : total;
+    const centerLabel = activeSlice
+        ? (STATUS_LABELS[activeSlice.status] ?? activeSlice.status).toUpperCase()
+        : "ORDER";
 
-    // ── Render ───────────────────────────────────────────────────────────────
+    // --- Chart Geometry ---
+    const CX = 90;
+    const CY = 90;
+    const OUTER_R = 80;
+    const INNER_R = 52; 
+    const SVG_SIZE = 180;
+
+    // --- Render ---
     return (
         <div
-            className="rounded-xl border border-border bg-card shadow-sm"
-            style={{ boxShadow: "0 4px 12px rgba(61,26,26,0.08)" }}
+            className="rounded-xl border border-border bg-card"
         >
             {/* Card header */}
             <div className="px-5 pt-5 pb-3 border-b border-border">
@@ -165,9 +176,9 @@ export default function OrdersDonut({ data }: OrdersDonutProps) {
                         <p className="text-sm">Belum ada data order</p>
                     </div>
                 ) : (
-                    <div className="flex flex-col sm:flex-row items-center gap-6">
-                        {/* ── SVG donut ── */}
-                        <div className="shrink-0">
+                    <div className="flex flex-col sm:flex-row xl:flex-col 2xl:flex-row items-center gap-6">
+                        {/* SVG Donut Chart */}
+                        <div className="shrink-0 flex items-center justify-center">
                             <svg
                                 width={SVG_SIZE}
                                 height={SVG_SIZE}
@@ -186,7 +197,15 @@ export default function OrdersDonut({ data }: OrdersDonutProps) {
                                             STATUS_COLORS[slices[0].status] ?? "#A48BBF"
                                         }
                                         strokeWidth={OUTER_R - INNER_R}
-                                    />
+                                        onMouseEnter={() => setHoveredStatus(slices[0].status)}
+                                        onMouseLeave={() => setHoveredStatus(null)}
+                                        style={{ cursor: "pointer" }}
+                                    >
+                                        <title>
+                                            {STATUS_LABELS[slices[0].status] ?? slices[0].status}:{" "}
+                                            {slices[0].count} order (100%)
+                                        </title>
+                                    </circle>
                                 )}
 
                                 {/* Multi-slice arcs */}
@@ -206,7 +225,13 @@ export default function OrdersDonut({ data }: OrdersDonutProps) {
                                             fill={
                                                 STATUS_COLORS[slice.status] ?? "#A48BBF"
                                             }
-                                            style={{ transition: "opacity 150ms ease" }}
+                                            onMouseEnter={() => setHoveredStatus(slice.status)}
+                                            onMouseLeave={() => setHoveredStatus(null)}
+                                            style={{
+                                                opacity: hoveredStatus && hoveredStatus !== slice.status ? 0.25 : 1,
+                                                transition: "opacity 200ms ease",
+                                                cursor: "pointer",
+                                            }}
                                         >
                                             <title>
                                                 {STATUS_LABELS[slice.status] ?? slice.status}:{" "}
@@ -219,31 +244,36 @@ export default function OrdersDonut({ data }: OrdersDonutProps) {
                                 {/* Center label */}
                                 <text
                                     x={CX}
-                                    y={CY - 8}
+                                    y={CY - 10}
                                     textAnchor="middle"
                                     dominantBaseline="middle"
-                                    fontSize="22"
+                                    fontSize="26"
                                     fontWeight="700"
                                     fill="#3D1A1A"
+                                    style={{ transition: "all 150ms ease" }}
                                 >
-                                    {total}
+                                    {centerValue}
                                 </text>
                                 <text
                                     x={CX}
-                                    y={CY + 14}
+                                    y={CY + 16}
                                     textAnchor="middle"
                                     dominantBaseline="middle"
-                                    fontSize="9.5"
+                                    fontSize={activeSlice ? "10" : "11"}
                                     fill="var(--muted-foreground)"
                                     letterSpacing="0.04em"
+                                    style={{ transition: "all 150ms ease" }}
                                 >
-                                    ORDER
+                                    {centerLabel}
                                 </text>
                             </svg>
                         </div>
 
-                        {/* ── Legend ── */}
-                        <ul className="flex-1 space-y-2 min-w-0">
+                        {/* Chart Legend */}
+                        <ul
+                            className="flex-1 w-full space-y-0.5 min-w-0"
+                            onMouseLeave={() => setHoveredStatus(null)}
+                        >
                             {data.map((d) => {
                                 const color = STATUS_COLORS[d.status] ?? "#A48BBF";
                                 const label = STATUS_LABELS[d.status] ?? d.status;
@@ -254,7 +284,12 @@ export default function OrdersDonut({ data }: OrdersDonutProps) {
                                 return (
                                     <li
                                         key={d.status}
-                                        className="flex items-center gap-2.5 min-w-0"
+                                        onMouseEnter={() => setHoveredStatus(d.status)}
+                                        className={cn(
+                                            "flex items-center gap-2.5 min-w-0 px-2 py-1.5 -mx-2 rounded-md transition-colors cursor-pointer",
+                                            hoveredStatus === d.status ? "bg-muted" : "hover:bg-muted/40",
+                                            hoveredStatus && hoveredStatus !== d.status ? "opacity-40" : "opacity-100"
+                                        )}
                                     >
                                         {/* Colored dot */}
                                         <span
@@ -267,7 +302,7 @@ export default function OrdersDonut({ data }: OrdersDonutProps) {
                                             aria-hidden="true"
                                         />
                                         {/* Label */}
-                                        <span className="flex-1 text-sm text-foreground truncate">
+                                        <span className="flex-1 text-sm text-foreground break-words leading-tight">
                                             {label}
                                         </span>
                                         {/* Count + pct */}

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, ShoppingCart, ChevronDown, ChevronRight, PackageOpen } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import Toast from "@/features/admin/components/dashboard/toast";
+import { toast } from "sonner";
 
 type OrderStatus = "DRAFT" | "CONFIRMED" | "IN_PRODUCTION" | "READY" | "COMPLETED" | "CANCELLED";
 
@@ -76,13 +76,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [toast, setToast] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const showToast = (message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(""), 2500);
-  };
 
   const loadOrders = useCallback(async () => {
     try {
@@ -93,7 +87,7 @@ export default function OrdersPage() {
         setOrders(payload.data);
       }
     } catch {
-      showToast("Gagal memuat order");
+      toast.error("Gagal memuat order");
     } finally {
       setIsLoading(false);
     }
@@ -125,9 +119,9 @@ export default function OrdersPage() {
       if (!response.ok || !payload.success) throw new Error();
 
       setOrders((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
-      showToast("Status order diperbarui");
+      toast.success("Status order diperbarui");
     } catch {
-      showToast("Gagal memperbarui status");
+      toast.error("Gagal memperbarui status");
     }
   };
 
@@ -307,7 +301,6 @@ export default function OrdersPage() {
         </CardContent>
       </Card>
 
-      <Toast message={toast} />
     </section>
   );
 }

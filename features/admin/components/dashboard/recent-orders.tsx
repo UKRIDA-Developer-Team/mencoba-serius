@@ -1,11 +1,20 @@
 "use client";
 
-// ─── Recent Orders List ────────────────────────────────────────────────────────
+// ============================================================================
+// Recent Orders List
 // Read-only component displaying the most recent 8 orders.
 
 import Link from "next/link";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// --- Types ---
 
 type OrderStatus =
     | "DRAFT"
@@ -31,7 +40,7 @@ type RecentOrdersProps = {
     orders: Array<RecentOrder>;
 };
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// --- Constants ---
 
 /** Status badge styling: background + text color using brand semantic colors */
 const STATUS_STYLE: Record<
@@ -77,7 +86,7 @@ const ORDER_TYPE_LABEL: Record<OrderType, string> = {
     CUSTOM_CAKE: "Custom",
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helper Functions ---
 
 function formatIDR(value: number): string {
     return `Rp\u00a0${value.toLocaleString("id-ID")}`;
@@ -107,7 +116,7 @@ function getOrderTypeLabel(orderType: string): string {
     return ORDER_TYPE_LABEL[orderType as OrderType] ?? orderType;
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
+// --- Sub-components ---
 
 function StatusBadge({ status }: { status: string }) {
     const style = getStatusStyle(status);
@@ -132,11 +141,11 @@ function TypeBadge({ orderType }: { orderType: string }) {
     );
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────────
+// --- Main Component ---
 
 export default function RecentOrders({ orders }: RecentOrdersProps) {
-    // Show only the 8 most recent
-    const recent = orders.slice(0, 8);
+    // Show only the 6 most recent
+    const recent = orders.slice(0, 6);
 
     return (
         <div
@@ -144,12 +153,12 @@ export default function RecentOrders({ orders }: RecentOrdersProps) {
             style={{ boxShadow: "0 4px 12px rgba(61,26,26,0.08)" }}
         >
             {/* Card header */}
-            <div className="px-5 pt-5 pb-3 border-b border-border">
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border">
                 <h3 className="text-base font-semibold tracking-tight text-foreground">
                     Order Terbaru
                 </h3>
                 {recent.length > 0 && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-xs text-muted-foreground">
                         Menampilkan{" "}
                         <span className="font-medium text-foreground">
                             {recent.length}
@@ -182,38 +191,41 @@ export default function RecentOrders({ orders }: RecentOrdersProps) {
                         <p className="text-sm">Belum ada order</p>
                     </div>
                 ) : (
-                    <ul className="divide-y divide-border" role="list">
-                        {recent.map((order) => (
-                            <li
-                                key={order.id}
-                                className="flex items-start sm:items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition-colors"
-                            >
-                                {/* Left: order number + customer */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="text-sm font-semibold text-foreground font-mono tracking-tight">
-                                            {order.orderNumber}
-                                        </span>
-                                        <TypeBadge orderType={order.orderType} />
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[200px]">Order</TableHead>
+                                <TableHead>Pelanggan</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Total</TableHead>
+                                <TableHead className="text-right">Tanggal</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {recent.map((order) => (
+                                <TableRow key={order.id}>
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-mono tracking-tight">{order.orderNumber}</span>
+                                            <TypeBadge orderType={order.orderType} />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="truncate max-w-[150px]">
                                         {order.customerName}
-                                    </p>
-                                </div>
-
-                                {/* Right: status, amount, date */}
-                                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3 shrink-0">
-                                    <StatusBadge status={order.status} />
-                                    <span className="text-sm font-medium tabular-nums text-foreground whitespace-nowrap">
+                                    </TableCell>
+                                    <TableCell>
+                                        <StatusBadge status={order.status} />
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums whitespace-nowrap">
                                         {formatIDR(order.totalAmount)}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                    </TableCell>
+                                    <TableCell className="text-right text-muted-foreground whitespace-nowrap">
                                         {formatDate(order.orderedAt)}
-                                    </span>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 )}
             </div>
 

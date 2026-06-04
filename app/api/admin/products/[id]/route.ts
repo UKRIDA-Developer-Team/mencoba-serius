@@ -12,18 +12,22 @@ const patchHandler = async (
   try {
     const { id } = await params;
     const body = await request.json();
-    const { isActive } = body;
+    const { isActive, isRecommended } = body;
 
-    if (isActive === undefined) {
+    if (isActive === undefined && isRecommended === undefined) {
       return NextResponse.json(
-        { success: false, message: "Field isActive wajib diisi" },
+        { success: false, message: "Tidak ada field yang diupdate" },
         { status: 400 }
       );
     }
 
+    const updates: any = {};
+    if (isActive !== undefined) updates.isActive = isActive;
+    if (isRecommended !== undefined) updates.isRecommended = isRecommended;
+
     const result = await db
       .update(products)
-      .set({ isActive })
+      .set(updates)
       .where(eq(products.id, BigInt(id)))
       .returning();
 
@@ -42,6 +46,7 @@ const patchHandler = async (
           id: result[0].id.toString(),
           slug: result[0].slug,
           isActive: result[0].isActive,
+          isRecommended: result[0].isRecommended,
         },
       },
       { status: 200 }
@@ -63,7 +68,7 @@ const putHandler = async (
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, category, basePrice, isCustomizable, isPreorderOnly } = body;
+    const { name, category, basePrice, description, imagePath, isCustomizable, isPreorderOnly, isRecommended } = body;
 
     if (!name || !category || basePrice === undefined) {
       return NextResponse.json(
@@ -96,10 +101,13 @@ const putHandler = async (
       .set({
         slug: generatedSlug,
         name,
+        description: description || null,
+        imagePath: imagePath || null,
         categoryId: cat[0].id,
         basePrice: basePrice.toString(),
         isCustomizable: isCustomizable ?? false,
         isPreorderOnly: isPreorderOnly ?? false,
+        isRecommended: isRecommended ?? false,
         updatedAt: new Date(),
       })
       .where(eq(products.id, BigInt(id)))
@@ -122,9 +130,12 @@ const putHandler = async (
           name: result[0].name,
           category,
           basePrice: Number(result[0].basePrice),
+          description: result[0].description,
+          imagePath: result[0].imagePath,
           sizeLabel: result[0].sizeLabel || "",
           isCustomizable: result[0].isCustomizable,
           isPreorderOnly: result[0].isPreorderOnly,
+          isRecommended: result[0].isRecommended,
           isActive: result[0].isActive,
         },
       },
