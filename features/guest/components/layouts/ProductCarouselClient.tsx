@@ -13,7 +13,7 @@ export default function ProductCarouselClient({
     const slides = products.map((product) => (
         <Link
             key={product.slug}
-            href={`/product/${product.slug}`}
+            href={`/catalog/${product.slug}`}
             className="block relative h-60 sm:h-80 overflow-hidden"
             aria-label={`View details for ${product.name}, priced at Rp ${product.price.toLocaleString('id-ID')}`}
         >

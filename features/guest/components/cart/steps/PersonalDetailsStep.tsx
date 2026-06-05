@@ -21,7 +21,6 @@ export default function PersonalDetailsStep() {
     const updateField = useCallback(
         (field: keyof typeof form, value: string) => {
             setForm((prev) => ({ ...prev, [field]: value }));
-            // Clear error when user starts typing
             if (errors[field as keyof FieldErrors]) {
                 setErrors((prev) => {
                     const next = { ...prev };
@@ -71,7 +70,7 @@ export default function PersonalDetailsStep() {
     }, [validate, setPersonalDetails, form, nextStep]);
 
     return (
-        <div className="animate-step-in max-w-2xl mx-auto">
+        <div className="animate-step-in max-w-screen">
             <div className="bg-card border border-border rounded-xl p-5 sm:p-6 space-y-5">
                 <div>
                     <h2 className="text-lg font-semibold text-primary">Personal Details</h2>

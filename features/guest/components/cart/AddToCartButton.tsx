@@ -29,7 +29,7 @@ export default function AddToCartButton({
             setShowVariantPicker(true);
             return;
         }
-        addItem(item, 1);
+        addItem({ ...item, hasVariants: false }, 1);
         setAdded(true);
         window.setTimeout(() => setAdded(false), 1400);
     };

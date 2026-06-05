@@ -16,6 +16,7 @@ import {
     PartyPopper,
     Copy,
     Check,
+    Loader2,
 } from "lucide-react";
 
 const PAYMENT_LABELS: Record<string, { label: string; icon: React.ReactNode }> = {
@@ -30,15 +31,50 @@ export default function ConfirmationStep() {
     const estimatedDeliveryFee = totalItems > 0 ? 25000 : 0;
     const grandTotal = totalPrice + estimatedDeliveryFee;
     const [orderPlaced, setOrderPlaced] = useState(false);
+    const [orderNumber, setOrderNumber] = useState<string | null>(null);
     const [bankCopied, setBankCopied] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handlePlaceOrder = () => {
-        if (paymentMethod === "whatsapp") {
-            const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "62812345678";
-            const link = generateWhatsAppCheckoutLink(items, grandTotal, whatsappNumber);
-            window.open(link, "_blank");
+    const handlePlaceOrder = async () => {
+        setIsSubmitting(true);
+        setError(null);
+
+        try {
+            const response = await fetch("/api/checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    items,
+                    personalDetails,
+                    paymentMethod,
+                    subtotal: totalPrice,
+                    deliveryFee: estimatedDeliveryFee,
+                    total: grandTotal,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || "Failed to place order");
+            }
+
+            setOrderNumber(data.data.orderNumber);
+
+            if (paymentMethod === "whatsapp") {
+                const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "62812345678";
+                const link = generateWhatsAppCheckoutLink(items, grandTotal, whatsappNumber);
+                window.open(link, "_blank");
+            }
+
+            setOrderPlaced(true);
+            clearCart();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to place order. Please try again.");
+        } finally {
+            setIsSubmitting(false);
         }
-        setOrderPlaced(true);
     };
 
     const handleCopyBank = () => {
@@ -62,6 +98,11 @@ export default function ConfirmationStep() {
 
                 <div>
                     <h2 className="text-xl font-semibold text-primary">Order Placed!</h2>
+                    {orderNumber && (
+                        <p className="text-sm text-accent font-medium mt-1">
+                            Order #{orderNumber}
+                        </p>
+                    )}
                     <p className="text-sm text-foreground/70 mt-1 max-w-sm mx-auto">
                         {paymentMethod === "whatsapp"
                             ? "Your order details have been sent via WhatsApp. We'll confirm shortly!"
@@ -116,7 +157,7 @@ export default function ConfirmationStep() {
 
     // Order review before placing
     return (
-        <div className="animate-step-in max-w-2xl mx-auto space-y-4">
+        <div className="animate-step-in max-w-screen space-y-4">
             <div>
                 <h2 className="text-lg font-semibold text-primary">Review Your Order</h2>
                 <p className="text-sm text-foreground/70 mt-0.5">
@@ -150,7 +191,13 @@ export default function ConfirmationStep() {
                                 <p className="text-sm font-medium text-primary truncate">{item.name}</p>
                                 <p className="text-xs text-foreground/60">
                                     {item.size} × {item.quantity}
+                                    {item.variantLabel && (
+                                        <span className="ml-1">• {item.variantLabel}</span>
+                                    )}
                                 </p>
+                                {item.notes && (
+                                    <p className="text-xs text-foreground/50 italic mt-0.5 truncate">{item.notes}</p>
+                                )}
                             </div>
                             <p className="text-sm font-semibold text-primary shrink-0">
                                 {(item.price * item.quantity).toLocaleString("id-ID", {
@@ -265,17 +312,32 @@ export default function ConfirmationStep() {
 
             {/* Navigation */}
             <div className="flex items-center justify-between pt-2">
-                <Button variant="outline" onClick={prevStep} className="h-10 gap-2 px-4">
+                <Button variant="outline" onClick={prevStep} className="h-10 gap-2 px-4" disabled={isSubmitting}>
                     <ArrowLeft className="size-4" />
                     Back
                 </Button>
-                <Button
-                    onClick={handlePlaceOrder}
-                    className="h-11 gap-2 px-6 text-sm"
-                >
-                    <CheckCircle2 className="size-4" />
-                    Place Order
-                </Button>
+                <div className="flex flex-col items-end gap-2">
+                    {error && (
+                        <p className="text-xs text-destructive text-right max-w-xs">{error}</p>
+                    )}
+                    <Button
+                        onClick={handlePlaceOrder}
+                        className="h-11 gap-2 px-6 text-sm"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="size-4 animate-spin" />
+                                Processing...
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle2 className="size-4" />
+                                Place Order
+                            </>
+                        )}
+                    </Button>
+                </div>
             </div>
         </div>
     );

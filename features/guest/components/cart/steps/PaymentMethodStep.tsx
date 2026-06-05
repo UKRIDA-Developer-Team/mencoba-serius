@@ -38,7 +38,7 @@ export default function PaymentMethodStep() {
     const { paymentMethod, setPaymentMethod, nextStep, prevStep } = useCheckout();
 
     return (
-        <div className="animate-step-in max-w-2xl mx-auto">
+        <div className="animate-step-in max-w-screen">
             <div className="space-y-4">
                 <div>
                     <h2 className="text-lg font-semibold text-primary">Payment Method</h2>

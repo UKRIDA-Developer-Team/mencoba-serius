@@ -67,6 +67,7 @@ export default function VariantPickerModal({
             category: product.category,
             size: product.size,
             price: finalPrice,
+            hasVariants: true,
             ...(selectedVariant && {
                 variantId: selectedVariant.id,
                 variantLabel: selectedVariant.label,

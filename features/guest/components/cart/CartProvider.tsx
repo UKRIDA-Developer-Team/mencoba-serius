@@ -20,6 +20,8 @@ export type CartItem = {
     quantity: number;
     variantId?: number;
     variantLabel?: string;
+    notes?: string;
+    hasVariants?: boolean;
 };
 
 type CartContextValue = {
@@ -29,6 +31,8 @@ type CartContextValue = {
     addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
     removeItem: (slug: string, variantId?: number) => void;
     updateQuantity: (slug: string, quantity: number, variantId?: number) => void;
+    updateItemNotes: (slug: string, notes: string, variantId?: number) => void;
+    updateItemVariant: (slug: string, oldVariantId: number | undefined, newVariantId: number, newVariantLabel: string, newPrice: number) => void;
     clearCart: () => void;
 };
 
@@ -97,6 +101,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems([]);
     }, []);
 
+    const updateItemNotes = useCallback((slug: string, notes: string, variantId?: number) => {
+        setItems((prev) =>
+            prev.map((entry) =>
+                entry.slug === slug && entry.variantId === variantId
+                    ? { ...entry, notes }
+                    : entry
+            )
+        );
+    }, []);
+
+    const updateItemVariant = useCallback((
+        slug: string,
+        oldVariantId: number | undefined,
+        newVariantId: number,
+        newVariantLabel: string,
+        newPrice: number
+    ) => {
+        setItems((prev) => {
+            const existing = prev.find(
+                (entry) => entry.slug === slug && entry.variantId === newVariantId
+            );
+            if (existing) {
+                return prev
+                    .map((entry) =>
+                        entry.slug === slug && entry.variantId === newVariantId
+                            ? { ...entry, quantity: entry.quantity + 1 }
+                            : entry
+                    )
+                    .filter((entry) => !(entry.slug === slug && entry.variantId === oldVariantId));
+            }
+            return prev.map((entry) =>
+                entry.slug === slug && entry.variantId === oldVariantId
+                    ? { ...entry, variantId: newVariantId, variantLabel: newVariantLabel, price: newPrice }
+                    : entry
+            );
+        });
+    }, []);
+
     const totalItems = useMemo(
         () => items.reduce((acc, item) => acc + item.quantity, 0),
         [items]
@@ -115,9 +157,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
             addItem,
             removeItem,
             updateQuantity,
+            updateItemNotes,
+            updateItemVariant,
             clearCart,
         }),
-        [items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart]
+        [items, totalItems, totalPrice, addItem, removeItem, updateQuantity, updateItemNotes, updateItemVariant, clearCart]
     );
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

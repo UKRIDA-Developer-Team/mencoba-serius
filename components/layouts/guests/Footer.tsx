@@ -1,13 +1,6 @@
 import Link from "next/link";
 import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 
-interface Product {
-    id: number;
-    name: string;
-    slug: string;
-    images?: string[];
-}
-
 const catalogLinks = [
     { label: "All Cakes", href: "/catalog" },
     { label: "Birthday Cakes", href: "/catalog?category=Birthday" },
@@ -51,15 +44,26 @@ export default function Footer() {
                     <p className="text-sm text-foreground/70 leading-relaxed">
                         Handcrafted celebration cakes made with love birthday, wedding, anniversary & custom orders.
                     </p>
-                    <a
-                        href="https://www.instagram.com/chef_on_pointe/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 mt-1 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200"
-                    >
-                        <FaInstagram className="w-4 h-4" />
-                        @chef_on_pointe
-                    </a>
+                    <div className="flex flex-col gap-2 mt-1">
+                        <a
+                            href="https://www.instagram.com/chef_on_pointe/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200"
+                        >
+                            <FaInstagram className="w-4 h-4" />
+                            @chef_on_pointe
+                        </a>
+                        <a
+                            href="https://wa.me/6285751623523"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200"
+                        >
+                            <FaWhatsapp className="w-4 h-4" />
+                            0857-5162-3523
+                        </a>
+                    </div>
                 </div>
 
                 {/* Links */}
@@ -76,28 +80,6 @@ export default function Footer() {
                                     {link.label}
                                 </Link>
                             ))}
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact</h4>
-                        <div className="flex flex-col gap-2 text-sm">
-                            <a
-                                href="https://www.instagram.com/chef_on_pointe/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-foreground/70 hover:text-primary transition-colors duration-150"
-                            >
-                                Instagram
-                            </a>
-                            <a
-                                href="https://wa.me/6285751623523"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-foreground/70 hover:text-primary transition-colors duration-150"
-                            >
-                                WhatsApp
-                            </a>
                         </div>
                     </div>
                 </div>
