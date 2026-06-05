@@ -27,10 +27,9 @@ const PAYMENT_LABELS: Record<string, { label: string; icon: React.ReactNode }> =
 
 export default function ConfirmationStep() {
     const { items, totalItems, totalPrice, clearCart } = useCart();
-    const { personalDetails, paymentMethod, prevStep, goToStep, resetCheckout } = useCheckout();
+    const { personalDetails, paymentMethod, prevStep, goToStep, resetCheckout, isOrderPlaced, placeOrder } = useCheckout();
     const estimatedDeliveryFee = totalItems > 0 ? 25000 : 0;
     const grandTotal = totalPrice + estimatedDeliveryFee;
-    const [orderPlaced, setOrderPlaced] = useState(false);
     const [orderNumber, setOrderNumber] = useState<string | null>(null);
     const [savedGrandTotal, setSavedGrandTotal] = useState<number>(0);
     const [bankCopied, setBankCopied] = useState(false);
@@ -70,7 +69,7 @@ export default function ConfirmationStep() {
                 window.open(link, "_blank");
             }
 
-            setOrderPlaced(true);
+            placeOrder();
             clearCart();
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to place order. Please try again.");
@@ -91,7 +90,7 @@ export default function ConfirmationStep() {
     };
 
     // Success screen after placing the order
-    if (orderPlaced) {
+    if (isOrderPlaced) {
         return (
             <div className="animate-step-in max-w-lg mx-auto text-center space-y-5 py-6">
                 <div className="mx-auto size-20 rounded-full bg-[#7BAE8F]/15 flex items-center justify-center">

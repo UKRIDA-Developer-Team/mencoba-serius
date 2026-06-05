@@ -4,6 +4,7 @@ import {
     createContext,
     useCallback,
     useContext,
+    useEffect,
     useMemo,
     useState,
     type ReactNode,
@@ -26,11 +27,13 @@ type CheckoutContextValue = {
     completedSteps: Set<CheckoutStep>;
     personalDetails: PersonalDetails;
     paymentMethod: PaymentMethod;
+    isOrderPlaced: boolean;
     setPersonalDetails: (details: PersonalDetails) => void;
     setPaymentMethod: (method: PaymentMethod) => void;
     nextStep: () => void;
     prevStep: () => void;
     goToStep: (step: CheckoutStep) => void;
+    placeOrder: () => void;
     canAdvance: boolean;
     direction: "forward" | "backward";
     resetCheckout: () => void;
@@ -67,11 +70,28 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
     const [direction, setDirection] = useState<"forward" | "backward">(
         "forward"
     );
+    const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+
+    // Lock browser back button after order is placed
+    useEffect(() => {
+        if (!isOrderPlaced) return;
+
+        // Push a new state so the first back goes here
+        window.history.pushState(null, "", window.location.href);
+
+        const handlePopState = () => {
+            // Push state again to prevent navigation
+            window.history.pushState(null, "", window.location.href);
+        };
+
+        window.addEventListener("popstate", handlePopState);
+        return () => window.removeEventListener("popstate", handlePopState);
+    }, [isOrderPlaced]);
 
     const canAdvance = useMemo(() => {
+        if (isOrderPlaced) return false;
         switch (currentStep) {
             case 1:
-                // Cart validation is handled by the cart provider (items.length > 0)
                 return true;
             case 2:
                 return (
@@ -86,9 +106,10 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
             default:
                 return false;
         }
-    }, [currentStep, personalDetails, paymentMethod]);
+    }, [currentStep, personalDetails, paymentMethod, isOrderPlaced]);
 
     const nextStep = useCallback(() => {
+        if (isOrderPlaced) return;
         setCurrentStep((prev) => {
             if (prev >= 4) return prev;
             setDirection("forward");
@@ -99,26 +120,31 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
             });
             return (prev + 1) as CheckoutStep;
         });
-    }, []);
+    }, [isOrderPlaced]);
 
     const prevStep = useCallback(() => {
+        if (isOrderPlaced) return;
         setCurrentStep((prev) => {
             if (prev <= 1) return prev;
             setDirection("backward");
             return (prev - 1) as CheckoutStep;
         });
-    }, []);
+    }, [isOrderPlaced]);
 
     const goToStep = useCallback(
         (step: CheckoutStep) => {
-            // Can only jump to completed steps or the current step
+            if (isOrderPlaced) return;
             if (step < currentStep || completedSteps.has(step)) {
                 setDirection(step < currentStep ? "backward" : "forward");
                 setCurrentStep(step);
             }
         },
-        [currentStep, completedSteps]
+        [currentStep, completedSteps, isOrderPlaced]
     );
+
+    const placeOrder = useCallback(() => {
+        setIsOrderPlaced(true);
+    }, []);
 
     const resetCheckout = useCallback(() => {
         setCurrentStep(1);
@@ -126,6 +152,7 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
         setPersonalDetails(INITIAL_PERSONAL_DETAILS);
         setPaymentMethod(null);
         setDirection("forward");
+        setIsOrderPlaced(false);
     }, []);
 
     const value = useMemo(
@@ -134,11 +161,13 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
             completedSteps,
             personalDetails,
             paymentMethod,
+            isOrderPlaced,
             setPersonalDetails,
             setPaymentMethod,
             nextStep,
             prevStep,
             goToStep,
+            placeOrder,
             canAdvance,
             direction,
             resetCheckout,
@@ -148,9 +177,11 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
             completedSteps,
             personalDetails,
             paymentMethod,
+            isOrderPlaced,
             nextStep,
             prevStep,
             goToStep,
+            placeOrder,
             canAdvance,
             direction,
             resetCheckout,

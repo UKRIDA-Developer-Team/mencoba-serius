@@ -11,9 +11,9 @@ import ConfirmationStep from "@/features/guest/components/cart/steps/Confirmatio
 
 function CheckoutWizard() {
     const { items } = useCart();
-    const { currentStep } = useCheckout();
+    const { currentStep, isOrderPlaced } = useCheckout();
 
-    if (items.length === 0 && currentStep === 1) {
+    if (items.length === 0 && currentStep === 1 && !isOrderPlaced) {
         return (
             <div className="bg-card border border-border rounded-2xl p-8 text-center">
                 <p className="font-semibold">Your cart is empty</p>

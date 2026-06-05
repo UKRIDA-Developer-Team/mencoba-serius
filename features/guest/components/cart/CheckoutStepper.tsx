@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 const STEPS: CheckoutStep[] = [1, 2, 3, 4];
 
 export default function CheckoutStepper() {
-    const { currentStep, completedSteps, goToStep } = useCheckout();
+    const { currentStep, completedSteps, goToStep, isOrderPlaced } = useCheckout();
     const stepCircleSize = "clamp(2.25rem, 2vw + 1.5rem, 2.75rem)";
 
     return (
@@ -22,7 +22,7 @@ export default function CheckoutStepper() {
                 {STEPS.map((step, index) => {
                     const isCompleted = completedSteps.has(step);
                     const isActive = step === currentStep;
-                    const isClickable = isCompleted || step < currentStep;
+                    const isClickable = !isOrderPlaced && (isCompleted || step < currentStep);
                     const isLastStep = index === STEPS.length - 1;
 
                     return (
