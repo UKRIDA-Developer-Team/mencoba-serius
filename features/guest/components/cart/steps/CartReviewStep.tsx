@@ -170,7 +170,12 @@ export default function CartReviewStep() {
                                           onClick={() => setEditingNotes(itemKey)}
                                           className="w-full text-left flex items-start gap-1.5 min-w-0"
                                         >
-                                          <span className="flex-1 min-w-0 break-all">
+                                          <span className={`flex-1 min-w-0 break-all text-sm
+                                            ${
+                                                !item.notes ? "text-accent hover:text-accent/80 transition-colors"
+                                                : ""}`
+                                            }
+                                          >
                                             {item.notes || "Tambah catatan untuk kustom kue..."}
                                           </span>
                                         </button>

@@ -6,7 +6,7 @@ export const ProductSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     description: z.string().min(10, "Description must be at least 10 characters"),
     price: z.number().min(0, "Price cannot be negative"),
-    image: z.string().default("/product/chocolate-cake.webp"),
+    image: z.string().default("/product/default-cake.webp"),
     category: z.string().min(1, "Category is required"),
     size: z.string().min(1, "Size is required"),
     tag: z.string().optional(),

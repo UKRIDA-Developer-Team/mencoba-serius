@@ -11,7 +11,7 @@ function mapDbProductToProduct(dbProduct: any, categoryName: string): Product {
         name: dbProduct.name,
         description: dbProduct.description || "",
         price: Number(dbProduct.basePrice),
-        image: dbProduct.imagePath || "/product/chocolate-cake.webp",
+        image: dbProduct.imagePath || "/product/default-cake.webp",
         category: categoryName,
         size: dbProduct.sizeLabel || "20 cm",
     };

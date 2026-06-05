@@ -6,6 +6,7 @@ export type AdminIngredient = {
   id: string;
   sku: string;
   name: string;
+  baseUnitId: string;
   baseUnitCode: string;
   reorderLevelBaseQty: number;
   currentStockBaseQty: number;
@@ -98,6 +99,13 @@ export async function getAdminIngredients(): Promise<AdminIngredient[]> {
             )
             FROM ingredient_stock_movements
             WHERE ingredient_id = ingredients.id AND unit_id = ingredients.base_unit_id
+          ), 0) + COALESCE((
+            SELECT SUM(poi.quantity::numeric * ium.to_base_multiplier::numeric)
+            FROM purchase_order_items poi
+            JOIN purchase_orders po ON po.id = poi.purchase_order_id
+            JOIN ingredient_unit_map ium ON ium.ingredient_id = poi.ingredient_id AND ium.unit_id = poi.unit_id
+            WHERE poi.ingredient_id = ingredients.id
+            AND po.status IN ('RECEIVED', 'PARTIALLY_RECEIVED')
           ), 0))::numeric
         `,
       })
@@ -110,6 +118,7 @@ export async function getAdminIngredients(): Promise<AdminIngredient[]> {
       id: item.id.toString(),
       sku: item.sku,
       name: item.name,
+      baseUnitId: item.baseUnitId.toString(),
       baseUnitCode: item.unitCode || "g",
       reorderLevelBaseQty: Number(item.reorderLevelBaseQty),
       currentStockBaseQty: Number(item.currentStock),

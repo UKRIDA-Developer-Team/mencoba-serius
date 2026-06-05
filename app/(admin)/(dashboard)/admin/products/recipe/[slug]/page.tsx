@@ -190,6 +190,18 @@ export default function ProductRecipePage({
     }
   };
 
+  const handleEdit = (recipe: RecipeRow) => {
+    setForm({
+      ingredientId: recipe.ingredientId,
+      unitId: recipe.unitId,
+      quantityPerProduct: recipe.quantityPerProduct.toString(),
+      wastagePercent: recipe.wastagePercent.toString(),
+      notes: recipe.notes || "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast.info("Mode Edit: Silakan sesuaikan nilai pada form dan klik Simpan");
+  };
+
   // --- Render ---
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-12 pb-8 space-y-6">
@@ -313,7 +325,7 @@ export default function ProductRecipePage({
 
             {/* Submit */}
             <Button type="submit" className="w-full">
-              Tambah
+              Simpan
             </Button>
 
             {/* Notes – full row */}
@@ -404,27 +416,32 @@ export default function ProductRecipePage({
                         )}
                       </td>
                       <td className="px-3 py-3 text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="destructive">
-                              Hapus
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Hapus Recipe?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Baris recipe ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Batal</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(recipe.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(recipe)}>
+                            Edit
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive">
                                 Hapus
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Hapus Recipe?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Baris recipe ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(recipe.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  Hapus
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </td>
                     </tr>
                   ))}

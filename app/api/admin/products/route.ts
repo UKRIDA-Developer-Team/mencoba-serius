@@ -24,7 +24,7 @@ const getHandler = async (request: NextRequest) => {
 const postHandler = async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { name, category, basePrice, description, imagePath, isRecommended } = body;
+    const { name, category, basePrice, description, imagePath, isRecommended, isPreorderOnly } = body;
 
     if (!name || !category || basePrice === undefined) {
       return NextResponse.json(
@@ -65,7 +65,7 @@ const postHandler = async (request: NextRequest) => {
         imagePath: imagePath || null,
         isActive: true,
         isCustomizable: false,
-        isPreorderOnly: false,
+        isPreorderOnly: isPreorderOnly ?? false,
         isRecommended: isRecommended ?? false,
         defaultLeadTimeDays: 0,
       })

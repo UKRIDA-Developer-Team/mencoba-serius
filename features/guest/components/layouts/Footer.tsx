@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaInstagram } from "react-icons/fa";
+import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 
 const catalogLinks = [
     { label: "Semua Kue", href: "/catalog" },
@@ -49,11 +49,21 @@ export default function Footer() {
                         href="https://www.instagram.com/chef_on_pointe/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 mt-1 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200"
+                        className="flex items-center gap-2 mt-3 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200"
                         aria-label="Follow Chef On Pointe on Instagram"
                     >
                         <FaInstagram className="w-4 h-4" aria-hidden="true" />
                         @chef_on_pointe
+                    </a>
+                    <a
+                        href="https://wa.me/6285751623523"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200"
+                        aria-label="Hubungi kami di WhatsApp"
+                    >
+                        <FaWhatsapp className="w-4 h-4" aria-hidden="true" />
+                        WhatsApp
                     </a>
                 </div>
 
@@ -71,30 +81,6 @@ export default function Footer() {
                                     {link.label}
                                 </Link>
                             ))}
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kontak</h4>
-                        <div className="flex flex-col gap-2 text-sm">
-                            <a
-                                href="https://www.instagram.com/chef_on_pointe/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-foreground/70 hover:text-primary transition-colors duration-150"
-                                aria-label="Kunjungi halaman Instagram kami"
-                            >
-                                Instagram
-                            </a>
-                            <a
-                                href="https://wa.me/6285751623523"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-foreground/70 hover:text-primary transition-colors duration-150"
-                                aria-label="Hubungi kami di WhatsApp"
-                            >
-                                WhatsApp
-                            </a>
                         </div>
                     </div>
                 </div>

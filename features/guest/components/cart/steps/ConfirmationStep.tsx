@@ -32,6 +32,7 @@ export default function ConfirmationStep() {
     const grandTotal = totalPrice + estimatedDeliveryFee;
     const [orderPlaced, setOrderPlaced] = useState(false);
     const [orderNumber, setOrderNumber] = useState<string | null>(null);
+    const [savedGrandTotal, setSavedGrandTotal] = useState<number>(0);
     const [bankCopied, setBankCopied] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -61,6 +62,7 @@ export default function ConfirmationStep() {
             }
 
             setOrderNumber(data.data.orderNumber);
+            setSavedGrandTotal(grandTotal);
 
             if (paymentMethod === "whatsapp") {
                 const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "62812345678";
@@ -127,7 +129,7 @@ export default function ConfirmationStep() {
                         <div className="pt-1">
                             <p className="text-xs text-muted-foreground">Total to transfer</p>
                             <p className="text-lg font-semibold text-primary">
-                                {grandTotal.toLocaleString("id-ID", {
+                                {savedGrandTotal.toLocaleString("id-ID", {
                                     style: "currency",
                                     currency: "IDR",
                                     minimumFractionDigits: 0,
@@ -183,7 +185,7 @@ export default function ConfirmationStep() {
 
                 <div className="space-y-2">
                     {items.map((item) => (
-                        <div key={item.slug} className="flex items-center gap-3">
+                        <div key={`${item.slug}-${item.variantId ?? "base"}`} className="flex items-center gap-3">
                             <div className="relative size-10 shrink-0 rounded-lg bg-background overflow-hidden">
                                 <Image src={item.image} alt={item.name} fill className="object-contain" />
                             </div>

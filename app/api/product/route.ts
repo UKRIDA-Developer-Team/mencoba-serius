@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
             name: row.name,
             description: row.description,
             price: Number(row.basePrice),
-            image: row.imagePath || "/product/chocolate-cake.webp",
+            image: row.imagePath || "/product/default-cake.webp",
             category: row.categoryName || "",
             size: row.sizeLabel || "20 cm",
         }));
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
             name: created.name,
             description: created.description,
             price: Number(created.basePrice),
-            image: created.imagePath || "/product/chocolate-cake.webp",
+            image: created.imagePath || "/product/default-cake.webp",
             category: parsed.category,
             size: created.sizeLabel || "20 cm",
         };

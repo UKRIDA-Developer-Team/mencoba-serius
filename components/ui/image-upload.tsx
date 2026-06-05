@@ -6,6 +6,7 @@ import { Button } from "./button";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { authenticatedFetch } from "@/lib/auth/client";
 
 interface ImageUploadProps {
   value?: string | null;
@@ -20,14 +21,27 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       setLoading(true);
       const file = acceptedFiles[0];
       
-      // Simulate upload and get object URL for preview
-      const fakeUrl = URL.createObjectURL(file);
-      
-      // In a real app, you would upload to Cloudinary / S3 here
-      setTimeout(() => {
-        onChange(fakeUrl);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await authenticatedFetch("/api/admin/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (data.success && data.url) {
+          onChange(data.url);
+        } else {
+          console.error("Upload failed:", data.message);
+          // Optionally show a toast here
+        }
+      } catch (error) {
+        console.error("Error uploading file:", error);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     }
   }, [onChange]);
 

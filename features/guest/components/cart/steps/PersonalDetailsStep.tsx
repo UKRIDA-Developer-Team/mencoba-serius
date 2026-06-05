@@ -217,7 +217,8 @@ export default function PersonalDetailsStep() {
                     </div>
 
                     {/* Order Notes */}
-                    <div className="space-y-1.5">
+                    {/* TODO: UNMAPPED TO DB COLUMN */}
+                    {/* <div className="space-y-1.5">
                         <label
                             htmlFor="checkout-notes"
                             className="text-[11px] font-semibold uppercase tracking-[0.08em] text-primary"
@@ -240,7 +241,7 @@ export default function PersonalDetailsStep() {
                                 "
                             />
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 

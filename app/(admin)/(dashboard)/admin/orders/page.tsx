@@ -252,7 +252,18 @@ export default function OrdersPage() {
                           {order.items.map((item) => (
                             <div key={item.id} className="flex flex-col sm:flex-row gap-3 p-3 rounded-lg border border-border/50 bg-card">
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium">{item.itemNameSnapshot}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-sm font-medium">
+                                    {item.itemNameSnapshot.includes(" \u2014 ")
+                                      ? item.itemNameSnapshot.split(" \u2014 ")[0]
+                                      : item.itemNameSnapshot}
+                                  </p>
+                                  {item.itemNameSnapshot.includes(" \u2014 ") && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 text-accent text-xs font-medium">
+                                      {item.itemNameSnapshot.split(" \u2014 ")[1]}
+                                    </span>
+                                  )}
+                                </div>
                                 
                                 {/* Custom Cake Details */}
                                 {item.customCake && (

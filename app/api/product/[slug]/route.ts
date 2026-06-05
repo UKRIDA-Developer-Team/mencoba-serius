@@ -40,7 +40,7 @@ export async function GET(
             name: row.name,
             description: row.description,
             price: Number(row.basePrice),
-            image: row.imagePath || "/product/chocolate-cake.webp",
+            image: row.imagePath || "/product/default-cake.webp",
             category: row.categoryName || "",
             size: row.sizeLabel || "20 cm",
         };

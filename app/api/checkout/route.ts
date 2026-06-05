@@ -9,6 +9,8 @@ const CheckoutItemSchema = z.object({
     price: z.number().positive(),
     quantity: z.number().int().positive(),
     variantId: z.number().optional(),
+    variantLabel: z.string().optional(),
+    notes: z.string().optional(),
 });
 
 const PersonalDetailsSchema = z.object({

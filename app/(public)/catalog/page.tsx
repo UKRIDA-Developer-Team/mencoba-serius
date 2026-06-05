@@ -53,13 +53,13 @@ export default async function CatalogPage({
                 </label>
 
                 <label className="flex flex-col gap-2 text-sm">
-                    Category
+                    Kategori
                     <select
                         name="category"
                         defaultValue={selectedCategory}
                         className="h-10 rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                     >
-                        <option value="">All categories</option>
+                        <option value="">Semua</option>
                         {categories.map((category) => (
                             <option key={category} value={category}>
                                 {category}
@@ -73,7 +73,7 @@ export default async function CatalogPage({
                         type="submit"
                         className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/85 transition-colors"
                     >
-                        Apply
+                        Terapkan
                     </button>
                     <Link
                         href="/catalog"
@@ -87,8 +87,8 @@ export default async function CatalogPage({
             {products.length === 0 ? (
                 <div className="min-h-56 border border-dashed border-border rounded-xl grid place-items-center text-center p-6">
                     <div>
-                        <p className="font-semibold">No products found</p>
-                        <p className="text-sm text-foreground/70 mt-1">Try another keyword or category.</p>
+                        <p className="font-semibold">Produk tidak ditemukan</p>
+                        <p className="text-sm text-foreground/70 mt-1">Coba kata kunci atau kategori lain.</p>
                     </div>
                 </div>
             ) : (
@@ -108,14 +108,22 @@ export default async function CatalogPage({
                                         className="object-contain"
                                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     />
+                                    {(variants.length > 0) && (
+                                        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md text-xs uppercase font-semibold tracking-[0.08em] shadow-sm z-10"
+                                            style={{ backgroundColor: "var(--color-accent)" }}>
+                                            Varian Tersedia
+                                        </div>
+                                    )}
                                 </Link>
 
                                 <div className="p-4 flex flex-col gap-3 flex-1">
                                     <div className="flex items-start justify-between gap-2">
                                         <h2 className="font-semibold text-primary">{product.name}</h2>
-                                        <span className="text-sm whitespace-nowrap border border-border rounded-full px-2 py-1">
-                                            {product.size}
-                                        </span>
+                                        {variants.length === 0 && (
+                                            <span className="text-sm whitespace-nowrap border border-border rounded-full px-2 py-1">
+                                                {product.size}
+                                            </span>
+                                        )}
                                     </div>
                                     <p className="text-xs text-foreground/70 line-clamp-3">{product.description}</p>
                                     <p className="text-sm font-semibold">

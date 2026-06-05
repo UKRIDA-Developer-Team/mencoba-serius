@@ -15,6 +15,8 @@ type CheckoutItem = {
     price: number;
     quantity: number;
     variantId?: number;
+    variantLabel?: string;
+    notes?: string;
 };
 
 type CheckoutPayload = {
@@ -147,15 +149,21 @@ export async function createGuestOrder(
 
             const productId =
                 productResult.length > 0 ? productResult[0].id : undefined;
+            
+            const nameParts = [item.name, !item.variantLabel ? `(${item.size})` : ''];
+            if (item.variantLabel) {
+                nameParts.push(`— ${item.variantLabel}`);
+            }
 
             await db
                 .insert(salesOrderItems)
                 .values({
                     salesOrderId,
                     productId,
-                    itemNameSnapshot: `${item.name} (${item.size})`,
+                    itemNameSnapshot: nameParts.join(" "),
                     quantity: item.quantity.toString(),
                     unitPrice: item.price.toString(),
+                    notes: item.notes || null,
                 })
                 .execute();
         }

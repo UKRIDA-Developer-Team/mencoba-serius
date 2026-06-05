@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { customers, salesOrders, salesOrderItems, customCakeRequests } from "@/lib/schema";
+import { customers, salesOrders, salesOrderItems, customCakeRequests, productRecipeIngredients, ingredientStockMovements } from "@/lib/schema";
 import { desc, eq, inArray } from "drizzle-orm";
 import { withAdminAuth } from "@/lib/auth/middleware";
 
@@ -209,17 +209,65 @@ const patchHandler = async (request: NextRequest) => {
       );
     }
 
+    const existingOrder = await db
+      .select({ status: salesOrders.status })
+      .from(salesOrders)
+      .where(eq(salesOrders.id, BigInt(id)))
+      .limit(1);
+
+    if (existingOrder.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Order tidak ditemukan" },
+        { status: 404 }
+      );
+    }
+
     const result = await db
       .update(salesOrders)
       .set({ status, updatedAt: new Date() })
       .where(eq(salesOrders.id, BigInt(id)))
       .returning();
 
-    if (result.length === 0) {
-      return NextResponse.json(
-        { success: false, message: "Order tidak ditemukan" },
-        { status: 404 }
-      );
+    // Auto-deduct stock if changing to COMPLETED
+    if (status === "COMPLETED" && existingOrder[0].status !== "COMPLETED") {
+      // 1. Get all items for this order
+      const items = await db
+        .select({ productId: salesOrderItems.productId, quantity: salesOrderItems.quantity })
+        .from(salesOrderItems)
+        .where(eq(salesOrderItems.salesOrderId, BigInt(id)));
+
+      // 2. For each item, get recipe and deduct
+      for (const item of items) {
+        if (!item.productId) continue;
+        
+        const recipes = await db
+          .select({
+            ingredientId: productRecipeIngredients.ingredientId,
+            unitId: productRecipeIngredients.unitId,
+            quantityPerProduct: productRecipeIngredients.quantityPerProduct,
+            wastagePercent: productRecipeIngredients.wastagePercent,
+          })
+          .from(productRecipeIngredients)
+          .where(eq(productRecipeIngredients.productId, item.productId));
+
+        for (const recipe of recipes) {
+          const itemQty = Number(item.quantity);
+          const recipeQty = Number(recipe.quantityPerProduct);
+          const wastage = Number(recipe.wastagePercent) / 100;
+          
+          const totalDeduct = itemQty * recipeQty * (1 + wastage);
+
+          await db.insert(ingredientStockMovements).values({
+            ingredientId: recipe.ingredientId,
+            unitId: recipe.unitId,
+            movementType: "OUT",
+            quantity: totalDeduct.toString(),
+            referenceType: "SALES_ORDER",
+            referenceId: BigInt(id),
+            notes: `Auto-deduct for order ${result[0].orderNumber}`,
+          });
+        }
+      }
     }
 
     return NextResponse.json(
