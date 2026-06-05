@@ -34,6 +34,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -611,7 +612,14 @@ export default function ProductsPage() {
                         ) : (
                           <>
                             <TableCell className={`font-semibold ${!product.isActive ? "text-muted-foreground" : "text-primary"}`}>
-                              {product.name}
+                              <div className="flex items-center gap-2">
+                                {product.name}
+                                {!product.isActive && (
+                                  <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4">
+                                    Nonaktif
+                                  </Badge>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-xs">
                               {product.category}
@@ -620,14 +628,16 @@ export default function ProductsPage() {
                               {formatIDR(product.basePrice)}
                             </TableCell>
                             <TableCell>
-                              <div className="flex items-center gap-1 flex-wrap">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 {product.isPreorderOnly && (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-medium">Pre-order</span>
+                                  <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100 text-[10px]">
+                                    Pre-order
+                                  </Badge>
                                 )}
                                 {(variantCounts[product.id] ?? 0) > 0 && (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
+                                  <Badge variant="outline" className="text-[10px]">
                                     {variantCounts[product.id]} varian
-                                  </span>
+                                  </Badge>
                                 )}
                               </div>
                             </TableCell>
@@ -653,9 +663,10 @@ export default function ProductsPage() {
                                 size="sm"
                                 variant={product.isActive ? "outline" : "ghost"}
                                 onClick={() => toggleActive(product)}
-                                className={`h-7 px-2 text-[10px] uppercase font-bold tracking-wider ${product.isActive ? "border-green-200 text-green-700 bg-green-50/50" : "text-muted-foreground bg-muted/50"}`}
+                                className={`h-7 px-2.5 text-[10px] uppercase font-bold tracking-wider gap-1 ${product.isActive ? "border-green-200 text-green-700 bg-green-50 hover:bg-green-100" : "border-red-200 text-red-600 bg-red-50/50 hover:bg-red-50"}`}
                                 title={product.isActive ? "Nonaktifkan" : "Aktifkan"}
                               >
+                                <span className={`size-1.5 rounded-full ${product.isActive ? "bg-green-500" : "bg-red-400"}`} />
                                 {product.isActive ? "Aktif" : "Nonaktif"}
                               </Button>
                             </TableCell>

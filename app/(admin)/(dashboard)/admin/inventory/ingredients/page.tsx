@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Search, Plus, Edit3, Check, X, Trash2, Package, Scale, Truck } from "lucide-react";
 import {
@@ -616,6 +617,7 @@ export default function InventoryIngredientsPage() {
                   <TableHead>Stok</TableHead>
                   <TableHead>Supplier</TableHead>
                   <TableHead>Level</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -667,7 +669,14 @@ export default function InventoryIngredientsPage() {
                       </div>
                     ) : (
                       <>
-                        <p className="text-sm font-medium">{ingredient.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">{ingredient.name}</p>
+                          {!ingredient.isActive && (
+                            <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">
+                              Nonaktif
+                            </Badge>
+                          )}
+                        </div>
                       </>
                     )}
                     </TableCell>
@@ -688,6 +697,22 @@ export default function InventoryIngredientsPage() {
                       {ingredient.reorderLevelBaseQty} {ingredient.baseUnitCode}
                     </TableCell>
 
+                    {/* Status */}
+                    <TableCell className="text-center">
+                      <button
+                        onClick={() => toggleActive(ingredient)}
+                        className={`inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-[10px] uppercase font-bold tracking-wider border transition-colors ${
+                          ingredient.isActive
+                            ? "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+                            : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                        }`}
+                        title={ingredient.isActive ? "Nonaktifkan" : "Aktifkan"}
+                      >
+                        <span className={`size-1.5 rounded-full ${ingredient.isActive ? "bg-green-500" : "bg-red-400"}`} />
+                        {ingredient.isActive ? "Aktif" : "Nonaktif"}
+                      </button>
+                    </TableCell>
+
                     {/* Actions */}
                     <TableCell className="text-right">
                       <div className="flex items-center gap-1.5 justify-end">
@@ -704,17 +729,6 @@ export default function InventoryIngredientsPage() {
                       <>
                         <button onClick={() => startEdit(ingredient)} className="size-7 flex justify-center items-center rounded-md border border-input bg-background hover:bg-accent/10 hover:text-accent hover:border-accent/50 text-muted-foreground transition-all" title="Edit">
                           <Edit3 className="size-3.5" />
-                        </button>
-                        <button
-                          onClick={() => toggleActive(ingredient)}
-                          className={`h-7 px-2 flex justify-center items-center rounded-md text-[10px] uppercase font-bold tracking-wider border transition-colors ${
-                            ingredient.isActive
-                              ? "border-green-200 bg-green-50/50 text-green-700 hover:bg-green-100/50"
-                              : "border-input bg-muted/50 text-muted-foreground hover:bg-muted"
-                          }`}
-                          title={ingredient.isActive ? "Nonaktifkan" : "Aktifkan"}
-                        >
-                          {ingredient.isActive ? "Aktif" : "Nonaktif"}
                         </button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
