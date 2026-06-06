@@ -62,7 +62,7 @@ export default function Footer() {
                         aria-label="Hubungi kami di WhatsApp"
                     >
                         <FaWhatsapp className="w-4 h-4" aria-hidden="true" />
-                        WhatsApp
+                        {process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}
                     </a>
                 </div>
 
