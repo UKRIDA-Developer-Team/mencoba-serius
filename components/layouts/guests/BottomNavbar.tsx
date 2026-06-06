@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
 const navigationItems = [
     { label: "Home", link: "/", icon: Home },
-    { label: "Catalog", link: "/catalog", icon: BookOpen },
+    { label: "Catalog", link: "/catalog", icon: BookOpen }, 
 ];
 
 export default function BottomNavbar() {
