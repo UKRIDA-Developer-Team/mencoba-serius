@@ -5,13 +5,19 @@ import type { Product } from "@/lib/schemas/product";
 
 // Map database product to frontend Product type
 function mapDbProductToProduct(dbProduct: any, categoryName: string): Product {
+    let imagePath = dbProduct.imagePath || "/product/default-cake.webp";
+    
+    if (imagePath && !imagePath.startsWith("/") && !imagePath.startsWith("http")) {
+        imagePath = "/" + imagePath;
+    }
+    
     return {
         id: Number(dbProduct.id),
         slug: dbProduct.slug,
         name: dbProduct.name,
         description: dbProduct.description || "",
         price: Number(dbProduct.basePrice),
-        image: dbProduct.imagePath || "/product/default-cake.webp",
+        image: imagePath,
         category: categoryName,
         size: dbProduct.sizeLabel || "20 cm",
     };
