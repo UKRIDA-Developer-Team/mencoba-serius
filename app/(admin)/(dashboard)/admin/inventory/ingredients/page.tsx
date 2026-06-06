@@ -224,7 +224,7 @@ export default function InventoryIngredientsPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium">{ingredient.name}</p>
-                        {!ingredient.isActive && <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">Nonaktif</Badge>}
+                        {/* {!ingredient.isActive && <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">Nonaktif</Badge>} */}
                       </div>
                     </TableCell>
                     <TableCell>

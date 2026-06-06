@@ -192,7 +192,7 @@ export default function ConfirmationStep() {
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-primary truncate">{item.name}</p>
                                 <p className="text-xs text-foreground/60">
-                                    {item.variantLabel ? '' : `${item.size} × ${item.quantity}`}
+                                    {item.variantLabel ? '' : <span className="ml-1">{item.size} × {item.quantity}</span>}
                                     {item.variantLabel && (
                                         <span className="ml-1">{item.variantLabel} × {item.quantity}</span>
                                     )}

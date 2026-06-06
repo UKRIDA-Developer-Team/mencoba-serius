@@ -9,7 +9,7 @@ const CheckoutItemSchema = z.object({
     size: z.string().optional().nullable(),
     price: z.coerce.number().min(0),
     quantity: z.coerce.number().int().min(1),
-    variantId: z.any(),
+    variantId: z.any().nullable().optional(),
     variantLabel: z.string().nullable().optional(),
     notes: z.string().nullable().optional(),
 });

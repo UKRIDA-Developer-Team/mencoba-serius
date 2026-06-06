@@ -65,7 +65,7 @@ export function IngredientUsageDialog({ isOpen, onClose, ingredient }: any) {
                                                     {new Date(m.createdAt).toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" })}
                                                 </td>
                                                 <td className="px-4 py-2">{getMovementLabel(m.movementType)}</td>
-                                                <td className="px-4 py-2 font-medium tabular-nums">{m.quantity}</td>
+                                                <td className="px-4 py-2 font-medium tabular-nums whitespace-nowrap">{m.quantity}</td>
                                                 <td className="px-4 py-2 text-xs text-muted-foreground truncate" title={m.notes || m.referenceType}>
                                                     {m.notes || m.referenceType || "-"}
                                                 </td>
