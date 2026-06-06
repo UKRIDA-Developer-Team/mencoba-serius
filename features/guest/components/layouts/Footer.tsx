@@ -55,7 +55,7 @@ export default function Footer() {
                         @chef_on_pointe
                     </a>
                     <a
-                        href="https://wa.me/6285751623523"
+                        href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200"
