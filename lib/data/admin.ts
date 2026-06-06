@@ -24,6 +24,7 @@ export type AdminProduct = {
   isCustomizable: boolean;
   isPreorderOnly: boolean;
   isActive: boolean;
+  isRecommended: boolean;
 };
 
 export type AdminCategory = {
@@ -147,6 +148,7 @@ export async function getAdminProducts(): Promise<AdminProduct[]> {
         isCustomizable: products.isCustomizable,
         isPreorderOnly: products.isPreorderOnly,
         isActive: products.isActive,
+        isRecommended: products.isRecommended,
         categoryName: productCategories.name,
       })
       .from(products)
@@ -163,6 +165,7 @@ export async function getAdminProducts(): Promise<AdminProduct[]> {
       isCustomizable: item.isCustomizable,
       isPreorderOnly: item.isPreorderOnly,
       isActive: item.isActive,
+      isRecommended: item.isRecommended,
     }));
   } catch (error) {
     console.error("Error fetching admin products:", error);
