@@ -4,31 +4,31 @@ import { z } from "zod";
 import { createGuestOrder } from "@/lib/data/checkout";
 
 const CheckoutItemSchema = z.object({
-    slug: z.string().min(1),
-    name: z.string().min(1),
-    size: z.string().min(1),
-    price: z.number().positive(),
-    quantity: z.number().int().positive(),
-    variantId: z.number().optional(),
-    variantLabel: z.string().optional(),
-    notes: z.string().optional(),
+    slug: z.string(),
+    name: z.string(),
+    size: z.string().optional().nullable(),
+    price: z.coerce.number().min(0),
+    quantity: z.coerce.number().int().min(1),
+    variantId: z.any(),
+    variantLabel: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
 });
 
 const PersonalDetailsSchema = z.object({
     fullName: z.string().min(1, "Full name is required"),
     phone: z.string().min(1, "Phone number is required"),
-    email: z.string().email().optional().or(z.literal("")),
+    email: z.string().email().optional().or(z.literal("")).nullable(),
     address: z.string().min(1, "Delivery address is required"),
-    notes: z.string().optional().or(z.literal("")),
+    notes: z.string().optional().or(z.literal("")).nullable(),
 });
 
 const CheckoutSchema = z.object({
     items: z.array(CheckoutItemSchema).min(1, "At least one item is required"),
     personalDetails: PersonalDetailsSchema,
     paymentMethod: z.enum(["whatsapp", "bank_transfer", "cod"]),
-    subtotal: z.number().positive(),
-    deliveryFee: z.number().min(0),
-    total: z.number().positive(),
+    subtotal: z.coerce.number().min(0),
+    deliveryFee: z.coerce.number().min(0),
+    total: z.coerce.number().min(0),
 });
 
 export async function POST(request: NextRequest) {

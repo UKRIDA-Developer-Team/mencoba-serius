@@ -57,7 +57,8 @@ export default function ConfirmationStep() {
             const data = await response.json();
 
             if (!data.success) {
-                throw new Error(data.error || "Failed to place order");
+                console.error("Checkout validation details:", data.details);
+                throw new Error(data.details ? "Validation error: " + JSON.stringify(data.details) : data.error || "Failed to place order");
             }
 
             setOrderNumber(data.data.orderNumber);

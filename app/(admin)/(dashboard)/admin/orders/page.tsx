@@ -263,7 +263,7 @@ export default function OrdersPage() {
 
                                     return (
                                       <>
-                                        <p className="text-sm font-medium">{productName}</p>
+                                        <p className="text-sm font-medium">{productName.replace(/ \(\)$/, "")}</p>
                                         {size && (
                                           <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-medium">
                                             {size}

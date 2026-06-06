@@ -11,12 +11,12 @@ import { eq } from "drizzle-orm";
 type CheckoutItem = {
     slug: string;
     name: string;
-    size: string;
+    size?: string | null;
     price: number;
     quantity: number;
-    variantId?: number;
-    variantLabel?: string;
-    notes?: string;
+    variantId?: number | null;
+    variantLabel?: string | null;
+    notes?: string | null;
 };
 
 type CheckoutPayload = {
