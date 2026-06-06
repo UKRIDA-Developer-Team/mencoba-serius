@@ -49,13 +49,13 @@ export default async function CatalogSlugPage({
                         <p className="text-xs tracking-wide uppercase text-foreground/70">{product.category}</p>
                         <h1 className="text-2xl font-semibold text-primary mt-1">{product.name}</h1>
                         {(!variants || variants.length === 0) && (
-                        <p className="text-lg font-semibold mt-2">
-                            {product.price.toLocaleString("id-ID", {
-                                style: "currency",
-                                currency: "IDR",
-                                minimumFractionDigits: 0,
-                            })}
-                        </p>
+                            <p className="text-lg font-semibold mt-2">
+                                {product.price.toLocaleString("id-ID", {
+                                    style: "currency",
+                                    currency: "IDR",
+                                    minimumFractionDigits: 0,
+                                })}
+                            </p>
                         )}
                     </div>
 
@@ -74,7 +74,7 @@ export default async function CatalogSlugPage({
                             name: product.name,
                             image: product.image,
                             category: product.category,
-                            size: product.size,
+                            size: variants.length === 1 ? variants[0].label : product.size,
                             price: product.price,
                         }}
                         variants={variants.map((v) => ({

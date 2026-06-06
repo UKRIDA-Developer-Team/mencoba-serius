@@ -44,15 +44,17 @@ export default function Footer() {
                     <p className="text-sm text-foreground/70 leading-relaxed">
                         Kue perayaan buatan tangan dengan cinta untuk ulang tahun, pernikahan, anniversary & pesanan custom.
                     </p>
+
+                    <h4 className="mt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact Us</h4>
                     <a
                         href="https://www.instagram.com/chef_on_pointe/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 mt-3 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200"
+                        className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200"
                         aria-label="Follow Chef On Pointe on Instagram"
                     >
-                        <FaInstagram className="w-4 h-4" aria-hidden="true" />
-                        @chef_on_pointe
+                        <FaInstagram className="w-6 h-6" aria-hidden="true" />
+                        Instagram
                     </a>
                     <a
                         href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`}
@@ -61,8 +63,9 @@ export default function Footer() {
                         className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200"
                         aria-label="Hubungi kami di WhatsApp"
                     >
-                        <FaWhatsapp className="w-4 h-4" aria-hidden="true" />
-                        {process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}
+                        <FaWhatsapp className="w-6 h-6" aria-hidden="true" />
+                        {/*process.env.NEXT_PUBLIC_WHATSAPP_NUMBER*/}
+                        WhatsApp
                     </a>
                 </div>
 

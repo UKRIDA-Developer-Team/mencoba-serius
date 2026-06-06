@@ -33,14 +33,27 @@ export default async function Products() {
                                         className="object-contain"
                                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     />
+                                    {variants.length >= 2 && (
+                                        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md text-xs uppercase font-semibold tracking-[0.08em] shadow-sm z-10"
+                                            style={{ backgroundColor: "var(--color-accent)" }}>
+                                            Varian Tersedia
+                                        </div>
+                                    )}
                                 </Link>
 
                                 <div className="p-4 flex flex-col gap-3 flex-1">
                                     <div className="flex items-start justify-between gap-2">
                                         <h2 className="font-semibold text-primary">{product.name}</h2>
-                                        <span className="text-sm whitespace-nowrap border border-border rounded-full px-2 py-1">
-                                            {product.size}
-                                        </span>
+                                        {variants.length === 0 && (
+                                            <span className="text-sm whitespace-nowrap border border-border rounded-full px-2 py-1">
+                                                {product.size}
+                                            </span>
+                                        )}
+                                        {variants.length > 0 && (
+                                            <span className="text-sm whitespace-nowrap border border-border rounded-full px-2 py-1">
+                                                {variants[0].label}
+                                            </span>
+                                        )}
                                     </div>
                                     <p className="text-xs text-foreground/70 line-clamp-3">{product.description}</p>
                                     <p className="text-sm font-semibold">
@@ -63,7 +76,7 @@ export default async function Products() {
                                                 name: product.name,
                                                 image: product.image,
                                                 category: product.category,
-                                                size: product.size,
+                                                size: variants.length === 1 ? variants[0].label : product.size,
                                                 price: product.price,
                                             }}
                                             variants={variants.length > 0 ? variants.map((v) => ({
@@ -79,7 +92,7 @@ export default async function Products() {
                         );
                     })}
                 </div>
-                
+
                 <div className="mt-8 flex justify-center">
                     <Link
                         href="/catalog"

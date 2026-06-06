@@ -49,7 +49,7 @@ export default function LoginPage() {
             localStorage.setItem("admin_username", data.admin.username);
             localStorage.setItem("admin_email", data.admin.email);
             localStorage.setItem("admin_id", data.admin.id);
-            
+
             // Redirect to admin dashboard
             router.push("/admin");
             router.refresh();
@@ -88,6 +88,7 @@ export default function LoginPage() {
                                 placeholder="Masukkan username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
+                                className="bg-card border-border rounded-lg"
                                 disabled={isLoading}
                                 autoComplete="username"
                             />
@@ -103,14 +104,15 @@ export default function LoginPage() {
                                 placeholder="Masukkan password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                className="bg-card border-border rounded-lg"
                                 disabled={isLoading}
                                 autoComplete="current-password"
                             />
                         </div>
 
-                        <Button 
-                            type="submit" 
-                            className="w-full" 
+                        <Button
+                            type="submit"
+                            className="w-full"
                             disabled={isLoading}
                         >
                             {isLoading ? "Masuk..." : "Masuk"}

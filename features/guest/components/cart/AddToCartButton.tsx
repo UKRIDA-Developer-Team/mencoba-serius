@@ -22,7 +22,7 @@ export default function AddToCartButton({
     const [added, setAdded] = useState(false);
     const [showVariantPicker, setShowVariantPicker] = useState(false);
 
-    const hasVariants = variants && variants.length > 0;
+    const hasVariants = variants && variants.length > 1;
 
     const handleClick = () => {
         if (hasVariants) {
@@ -52,7 +52,7 @@ export default function AddToCartButton({
                         name: item.name,
                         image: item.image,
                         category: item.category,
-                        size: item.size,
+                        size: '',
                         price: item.price,
                     }}
                     variants={variants}

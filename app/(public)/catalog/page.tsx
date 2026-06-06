@@ -110,7 +110,7 @@ export default async function CatalogPage({
                                         className="object-contain"
                                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     />
-                                    {(variants.length > 0) && (
+                                    {(variants.length >= 2) && (
                                         <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md text-xs uppercase font-semibold tracking-[0.08em] shadow-sm z-10"
                                             style={{ backgroundColor: "var(--color-accent)" }}>
                                             Varian Tersedia
@@ -124,6 +124,11 @@ export default async function CatalogPage({
                                         {variants.length === 0 && (
                                             <span className="text-sm whitespace-nowrap border border-border rounded-full px-2 py-1">
                                                 {product.size}
+                                            </span>
+                                        )}
+                                        {variants.length > 0 && (
+                                            <span className="text-sm whitespace-nowrap border border-border rounded-full px-2 py-1">
+                                                {variants[0].label}
                                             </span>
                                         )}
                                     </div>
@@ -148,10 +153,10 @@ export default async function CatalogPage({
                                                 name: product.name,
                                                 image: product.image,
                                                 category: product.category,
-                                                size: product.size,
+                                                size: variants.length === 1 ? variants[0].label : product.size,
                                                 price: product.price,
                                             }}
-                                            variants={variants.length > 0 ? variants.map((v) => ({
+                                            variants={variants.length >= 2 ? variants.map((v) => ({
                                                 id: v.id,
                                                 label: v.label,
                                                 priceOverride: v.priceOverride,
