@@ -25,6 +25,7 @@ export function ProductFormDialog({ isOpen, onClose, categories, onSubmit, initi
     price: "",
     description: "",
     imagePath: "",
+    imagePublicId: "",
     isRecommended: false,
     isPreorderOnly: false,
   });
@@ -38,6 +39,7 @@ export function ProductFormDialog({ isOpen, onClose, categories, onSubmit, initi
         price: initialData.basePrice?.toString() || "",
         description: initialData.description || "",
         imagePath: initialData.imagePath || "",
+        imagePublicId: initialData.imagePublicId || "",
         isRecommended: initialData.isRecommended || false,
         isPreorderOnly: initialData.isPreorderOnly || false,
       });
@@ -48,6 +50,7 @@ export function ProductFormDialog({ isOpen, onClose, categories, onSubmit, initi
         price: "",
         description: "",
         imagePath: "",
+        imagePublicId: "",
         isRecommended: false,
         isPreorderOnly: false,
       });
@@ -140,7 +143,14 @@ export function ProductFormDialog({ isOpen, onClose, categories, onSubmit, initi
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Gambar Produk</label>
             <ImageUpload
               value={form.imagePath}
-              onChange={(url) => setForm((p) => ({ ...p, imagePath: url || "" }))}
+              publicId={form.imagePublicId}
+              onChange={(url, pubId) =>
+                setForm((p) => ({
+                  ...p,
+                  imagePath: url || "",
+                  imagePublicId: pubId || "",
+                }))
+              }
             />
           </div>
           <div className="flex items-center justify-between px-1">

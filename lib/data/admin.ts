@@ -21,6 +21,8 @@ export type AdminProduct = {
   category: string;
   basePrice: number;
   sizeLabel: string;
+  imagePath: string | null;
+  imagePublicId: string | null;
   isCustomizable: boolean;
   isPreorderOnly: boolean;
   isActive: boolean;
@@ -145,6 +147,8 @@ export async function getAdminProducts(): Promise<AdminProduct[]> {
         categoryId: products.categoryId,
         basePrice: products.basePrice,
         sizeLabel: products.sizeLabel,
+        imagePath: products.imagePath,
+        imagePublicId: products.imagePublicId,
         isCustomizable: products.isCustomizable,
         isPreorderOnly: products.isPreorderOnly,
         isActive: products.isActive,
@@ -162,6 +166,8 @@ export async function getAdminProducts(): Promise<AdminProduct[]> {
       category: item.categoryName || "Unknown",
       basePrice: Number(item.basePrice),
       sizeLabel: item.sizeLabel || "",
+      imagePath: item.imagePath,
+      imagePublicId: item.imagePublicId,
       isCustomizable: item.isCustomizable,
       isPreorderOnly: item.isPreorderOnly,
       isActive: item.isActive,

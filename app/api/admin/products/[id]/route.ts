@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { products, productCategories } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { withAdminAuth } from "@/lib/auth/middleware";
+import { deleteFromCloudinary } from "@/lib/cloudinary";
 
 const patchHandler = async (
   request: NextRequest,
@@ -71,7 +72,7 @@ const putHandler = async (
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, category, basePrice, description, imagePath, isCustomizable, isPreorderOnly, isRecommended } = body;
+    const { name, category, basePrice, description, imagePath, imagePublicId, isCustomizable, isPreorderOnly, isRecommended } = body;
 
     if (!name || !category || basePrice === undefined) {
       return NextResponse.json(
@@ -106,6 +107,7 @@ const putHandler = async (
         name,
         description: description || null,
         imagePath: imagePath || null,
+        imagePublicId: imagePublicId || null,
         categoryId: cat[0].id,
         basePrice: basePrice.toString(),
         isCustomizable: isCustomizable ?? false,
@@ -137,6 +139,7 @@ const putHandler = async (
           basePrice: Number(result[0].basePrice),
           description: result[0].description,
           imagePath: result[0].imagePath,
+          imagePublicId: result[0].imagePublicId,
           sizeLabel: result[0].sizeLabel || "",
           isCustomizable: result[0].isCustomizable,
           isPreorderOnly: result[0].isPreorderOnly,
@@ -163,6 +166,13 @@ const deleteHandler = async (
   try {
     const { id } = await params;
 
+    // Fetch the product to get its Cloudinary public_id before deleting
+    const existing = await db
+      .select({ imagePublicId: products.imagePublicId })
+      .from(products)
+      .where(eq(products.id, BigInt(id)))
+      .limit(1);
+
     const result = await db
       .delete(products)
       .where(eq(products.id, BigInt(id)))
@@ -173,6 +183,15 @@ const deleteHandler = async (
         { success: false, message: "Produk tidak ditemukan" },
         { status: 404 }
       );
+    }
+
+    // Delete the product's image from Cloudinary (best-effort)
+    if (existing.length > 0 && existing[0].imagePublicId) {
+      try {
+        await deleteFromCloudinary(existing[0].imagePublicId);
+      } catch (err) {
+        console.warn("Failed to delete Cloudinary image:", err);
+      }
     }
 
     revalidateTag("products", "max");

@@ -27,7 +27,7 @@ const postHandler = async (request: NextRequest) => {
     const body = await request.json();
     console.log("POST /api/admin/products - Received data:", body);
     
-    const { name, category, basePrice, description, imagePath, isRecommended, isPreorderOnly } = body;
+    const { name, category, basePrice, description, imagePath, imagePublicId, isRecommended, isPreorderOnly } = body;
 
     if (!name || !category || basePrice === undefined) {
       return NextResponse.json(
@@ -77,6 +77,7 @@ const postHandler = async (request: NextRequest) => {
         basePrice: basePrice.toString(),
         description: description || null,
         imagePath: imagePath || null,
+        imagePublicId: imagePublicId || null,
         isActive: true,
         isCustomizable: false,
         isPreorderOnly: isPreorderOnly ?? false,
@@ -101,6 +102,7 @@ const postHandler = async (request: NextRequest) => {
           basePrice: Number(result[0].basePrice),
           description: result[0].description,
           imagePath: result[0].imagePath,
+          imagePublicId: result[0].imagePublicId,
           sizeLabel: result[0].sizeLabel || "",
           isCustomizable: result[0].isCustomizable,
           isPreorderOnly: result[0].isPreorderOnly,

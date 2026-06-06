@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { uploadToCloudinary, deleteFromCloudinary } from "@/lib/cloudinary";
 import { withAdminAuth } from "@/lib/auth/middleware";
 
 const postHandler = async (request: NextRequest) => {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
+    const oldPublicId = formData.get("oldPublicId") as string | null;
 
     if (!file) {
       return NextResponse.json(
@@ -15,40 +15,43 @@ const postHandler = async (request: NextRequest) => {
       );
     }
 
+    // Convert File to Buffer for Cloudinary upload_stream
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Sanitize filename - keep only safe characters
-    const originalName = file.name
-      .toLowerCase()
-      .replace(/[^a-z0-9.\-_]/g, "-")
-      .replace(/-+/g, "-");
-    
-    const timestamp = Date.now();
-    const newFilename = `${timestamp}-${originalName}`;
+    // Upload to Cloudinary under the "products" folder
+    // f_auto + q_auto are applied via the transformation in lib/cloudinary.ts
+    const { publicId, secureUrl } = await uploadToCloudinary(
+      buffer,
+      file.name,
+      "products"
+    );
 
-    // Ensure the upload directory exists
-    const uploadDir = join(process.cwd(), "public", "product");
-    try {
-      await mkdir(uploadDir, { recursive: true });
-    } catch (e) {
-      console.error("Error creating directory:", e);
+    // If replacing an old image, delete the previous one from Cloudinary
+    if (oldPublicId) {
+      try {
+        await deleteFromCloudinary(oldPublicId);
+      } catch (deleteError) {
+        // Log but don't fail — the new upload succeeded
+        console.warn("Failed to delete old Cloudinary image:", deleteError);
+      }
     }
 
-    const filePath = join(uploadDir, newFilename);
-    await writeFile(filePath, buffer);
-
-    const url = `/product/${newFilename}`;
-    console.log("File uploaded successfully:", { filePath, url, size: buffer.length });
+    console.log("Cloudinary upload success:", { publicId, secureUrl });
 
     return NextResponse.json(
-      { success: true, url },
+      { success: true, url: secureUrl, publicId },
       { status: 201 }
     );
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(
-      { success: false, message: "Gagal mengupload file: " + (error instanceof Error ? error.message : "Unknown error") },
+      {
+        success: false,
+        message:
+          "Gagal mengupload file: " +
+          (error instanceof Error ? error.message : "Unknown error"),
+      },
       { status: 500 }
     );
   }

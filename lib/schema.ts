@@ -119,6 +119,7 @@ export const products = pgTable("products", {
   basePrice: numeric("base_price", { precision: 12, scale: 2 }).notNull(),
   sizeLabel: text("size_label"),
   imagePath: text("image_path"),
+  imagePublicId: text("image_public_id"),
   isActive: boolean("is_active").notNull().default(true),
   isRecommended: boolean("is_recommended").notNull().default(false),
   isCustomizable: boolean("is_customizable").notNull().default(false),
