@@ -305,7 +305,7 @@ export default function ProductsPage() {
                               Pre-order
                             </Badge>
                           )}
-                          {(variantCounts[product.id] ?? 0) > 0 && (
+                          {(variantCounts[product.id] ?? 0) >= 2 && (
                             <Badge variant="outline" className="text-[10px]">
                               {variantCounts[product.id]} varian
                             </Badge>
