@@ -115,10 +115,6 @@ export default function LoginPage() {
                         >
                             {isLoading ? "Masuk..." : "Masuk"}
                         </Button>
-
-                        <p className="text-xs text-muted-foreground text-center pt-2">
-                            Demo credentials: admin / admin123
-                        </p>
                     </form>
                 </CardContent>
             </Card>
