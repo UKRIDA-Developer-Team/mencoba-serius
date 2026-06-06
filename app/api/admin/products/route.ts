@@ -24,6 +24,8 @@ const getHandler = async (request: NextRequest) => {
 const postHandler = async (request: NextRequest) => {
   try {
     const body = await request.json();
+    console.log("POST /api/admin/products - Received data:", body);
+    
     const { name, category, basePrice, description, imagePath, isRecommended, isPreorderOnly } = body;
 
     if (!name || !category || basePrice === undefined) {
@@ -54,6 +56,17 @@ const postHandler = async (request: NextRequest) => {
     const randomSuffix = Math.floor(Math.random() * 9000 + 1000);
     const generatedSlug = `${toSlug(name)}-${randomSuffix}`;
 
+    console.log("Creating product with data:", {
+      slug: generatedSlug,
+      name,
+      categoryId: cat[0].id,
+      basePrice: basePrice.toString(),
+      imagePath: imagePath || null,
+      description,
+      isPreorderOnly,
+      isRecommended,
+    });
+
     const result = await db
       .insert(products)
       .values({
@@ -70,6 +83,8 @@ const postHandler = async (request: NextRequest) => {
         defaultLeadTimeDays: 0,
       })
       .returning();
+
+    console.log("Product created successfully:", result[0]);
 
     return NextResponse.json(
       {
@@ -95,7 +110,7 @@ const postHandler = async (request: NextRequest) => {
   } catch (error) {
     console.error("Error creating product:", error);
     return NextResponse.json(
-      { success: false, message: "Gagal menambahkan produk" },
+      { success: false, message: "Gagal menambahkan produk: " + (error instanceof Error ? error.message : "Unknown error") },
       { status: 500 }
     );
   }

@@ -7,6 +7,7 @@ import { IoCloudUploadOutline } from "react-icons/io5";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { authenticatedFetch } from "@/lib/auth/client";
+import { toast } from "sonner";
 
 interface ImageUploadProps {
   value?: string | null;
@@ -15,30 +16,42 @@ interface ImageUploadProps {
 
 export function ImageUpload({ value, onChange }: ImageUploadProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       setLoading(true);
+      setError(null);
       const file = acceptedFiles[0];
       
       const formData = new FormData();
       formData.append("file", file);
 
       try {
+        console.log("Uploading file:", file.name, file.size);
         const res = await authenticatedFetch("/api/admin/upload", {
           method: "POST",
           body: formData,
         });
 
         const data = await res.json();
+        console.log("Upload response:", data);
+        
         if (data.success && data.url) {
+          console.log("Upload success, URL:", data.url);
           onChange(data.url);
+          toast.success("Gambar berhasil diupload!");
         } else {
-          console.error("Upload failed:", data.message);
-          // Optionally show a toast here
+          const errorMsg = data.message || "Upload gagal";
+          console.error("Upload failed:", errorMsg);
+          setError(errorMsg);
+          toast.error(errorMsg);
         }
       } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : "Terjadi kesalahan saat upload";
         console.error("Error uploading file:", error);
+        setError(errorMsg);
+        toast.error(errorMsg);
       } finally {
         setLoading(false);
       }
@@ -69,19 +82,23 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
   }
 
   return (
-    <div
-      {...getRootProps()}
-      className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${
-        isDragActive ? "border-accent bg-accent/5" : "border-muted-foreground/25 hover:border-accent/50 hover:bg-accent/5"
-      }`}
-    >
-      <input {...getInputProps()} />
-      <IoCloudUploadOutline className="size-8 text-muted-foreground mb-3" />
-      <p className="text-sm font-medium text-foreground text-center">
-        {isDragActive ? "Drop gambar di sini..." : "Drag & drop gambar, atau klik"}
-      </p>
-      <p className="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP maks 5MB</p>
-      {loading && <p className="text-xs text-accent mt-2 animate-pulse">Mengupload...</p>}
+    <div>
+      <div
+        {...getRootProps()}
+        className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${
+          isDragActive ? "border-accent bg-accent/5" : "border-muted-foreground/25 hover:border-accent/50 hover:bg-accent/5"
+        }`}
+      >
+        <input {...getInputProps()} />
+        <IoCloudUploadOutline className="size-8 text-muted-foreground mb-3" />
+        <p className="text-sm font-medium text-foreground text-center">
+          {isDragActive ? "Drop gambar di sini..." : "Drag & drop gambar, atau klik"}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP maks 5MB</p>
+        {loading && <p className="text-xs text-accent mt-2 animate-pulse">Mengupload...</p>}
+      </div>
+      {error && <p className="text-xs text-destructive mt-2">{error}</p>}
     </div>
   );
 }
+

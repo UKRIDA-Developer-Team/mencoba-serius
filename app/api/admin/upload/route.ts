@@ -18,8 +18,12 @@ const postHandler = async (request: NextRequest) => {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Sanitize filename
-    const originalName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "");
+    // Sanitize filename - keep only safe characters
+    const originalName = file.name
+      .toLowerCase()
+      .replace(/[^a-z0-9.\-_]/g, "-")
+      .replace(/-+/g, "-");
+    
     const timestamp = Date.now();
     const newFilename = `${timestamp}-${originalName}`;
 
@@ -28,20 +32,23 @@ const postHandler = async (request: NextRequest) => {
     try {
       await mkdir(uploadDir, { recursive: true });
     } catch (e) {
-      // Ignore if directory already exists
+      console.error("Error creating directory:", e);
     }
 
-    const path = join(uploadDir, newFilename);
-    await writeFile(path, buffer);
+    const filePath = join(uploadDir, newFilename);
+    await writeFile(filePath, buffer);
+
+    const url = `/product/${newFilename}`;
+    console.log("File uploaded successfully:", { filePath, url, size: buffer.length });
 
     return NextResponse.json(
-      { success: true, url: `/product/${newFilename}` },
+      { success: true, url },
       { status: 201 }
     );
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(
-      { success: false, message: "Gagal mengupload file" },
+      { success: false, message: "Gagal mengupload file: " + (error instanceof Error ? error.message : "Unknown error") },
       { status: 500 }
     );
   }

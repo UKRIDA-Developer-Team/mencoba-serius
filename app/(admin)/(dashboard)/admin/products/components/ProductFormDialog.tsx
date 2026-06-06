@@ -56,6 +56,25 @@ export function ProductFormDialog({ isOpen, onClose, categories, onSubmit, initi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that required fields are filled
+    if (!form.name.trim()) {
+      alert("Nama produk tidak boleh kosong");
+      return;
+    }
+    
+    if (!form.category) {
+      alert("Kategori harus dipilih");
+      return;
+    }
+    
+    if (!form.price || Number(form.price) <= 0) {
+      alert("Harga harus lebih dari 0");
+      return;
+    }
+
+    console.log("Form data being submitted:", { ...form, basePrice: Number(form.price) });
+    
     await onSubmit({ ...form, basePrice: Number(form.price) });
   };
 
