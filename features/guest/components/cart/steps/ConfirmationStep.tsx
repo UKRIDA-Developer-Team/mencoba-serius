@@ -41,7 +41,6 @@ export default function ConfirmationStep() {
         setError(null);
 
         try {
-            console.log(items);
             const response = await fetch("/api/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

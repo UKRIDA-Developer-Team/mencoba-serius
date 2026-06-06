@@ -2,7 +2,6 @@ import { type NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { createGuestOrder } from "@/lib/data/checkout";
-import { console } from "inspector";
 
 const CheckoutItemSchema = z.object({
     slug: z.string(),
@@ -36,7 +35,7 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const parsed = CheckoutSchema.parse(body);
-        console.info(parsed);
+
         const result = await createGuestOrder({
             ...parsed,
             personalDetails: {
@@ -64,7 +63,6 @@ export async function POST(request: NextRequest) {
             message: "Order placed successfully",
         });
     } catch (error) {
-        console.error(error);
         if (error instanceof z.ZodError) {
             return Response.json(
                 {
