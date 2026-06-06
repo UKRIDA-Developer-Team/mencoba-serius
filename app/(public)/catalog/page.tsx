@@ -153,14 +153,14 @@ export default async function CatalogPage({
                                                 name: product.name,
                                                 image: product.image,
                                                 category: product.category,
-                                                size: variants.length === 1 ? variants[0].label : product.size,
+                                                size: variants?.length === 1 ? variants[0].label : product.size,
                                                 price: product.price,
                                             }}
                                             variants={variants.length >= 2 ? variants.map((v) => ({
                                                 id: v.id,
                                                 label: v.label,
                                                 priceOverride: v.priceOverride,
-                                            })) : undefined}
+                                            })) : []}
                                             className="h-9"
                                         />
                                     </div>

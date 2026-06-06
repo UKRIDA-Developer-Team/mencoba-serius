@@ -41,6 +41,7 @@ export default function ConfirmationStep() {
         setError(null);
 
         try {
+            console.log(items);
             const response = await fetch("/api/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -192,9 +193,9 @@ export default function ConfirmationStep() {
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-primary truncate">{item.name}</p>
                                 <p className="text-xs text-foreground/60">
-                                    {item.size} × {item.quantity}
+                                    {item.variantLabel ? '' : `${item.size} × ${item.quantity}`}
                                     {item.variantLabel && (
-                                        <span className="ml-1">• {item.variantLabel}</span>
+                                        <span className="ml-1">{item.variantLabel} × {item.quantity}</span>
                                     )}
                                 </p>
                                 {item.notes && (

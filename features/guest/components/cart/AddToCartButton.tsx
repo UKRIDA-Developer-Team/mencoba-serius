@@ -52,7 +52,7 @@ export default function AddToCartButton({
                         name: item.name,
                         image: item.image,
                         category: item.category,
-                        size: '',
+                        size: item.size,
                         price: item.price,
                     }}
                     variants={variants}

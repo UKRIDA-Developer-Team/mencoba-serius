@@ -80,7 +80,7 @@ export default function CartReviewStep() {
                                             {item.name}
                                         </Link>
                                         <p className="text-xs text-foreground/70 mt-1">
-                                            {item.category} {item.size}
+                                            {item.category} {item.variantLabel ? '' : item.size}
                                             {item.variantLabel && (
                                                 <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-medium">
                                                     {item.variantLabel}
@@ -166,18 +166,17 @@ export default function CartReviewStep() {
                                         </div>
                                     ) : (
                                         <button
-                                          type="button"
-                                          onClick={() => setEditingNotes(itemKey)}
-                                          className="w-full text-left flex items-start gap-1.5 min-w-0"
+                                            type="button"
+                                            onClick={() => setEditingNotes(itemKey)}
+                                            className="w-full text-left flex items-start gap-1.5 min-w-0"
                                         >
-                                          <span className={`flex-1 min-w-0 break-all text-sm
-                                            ${
-                                                !item.notes ? "text-accent hover:text-accent/80 transition-colors"
-                                                : ""}`
+                                            <span className={`flex-1 min-w-0 break-all text-sm
+                                            ${!item.notes ? "text-accent hover:text-accent/80 transition-colors"
+                                                    : ""}`
                                             }
-                                          >
-                                            {item.notes || "Tambah catatan untuk kustom kue..."}
-                                          </span>
+                                            >
+                                                {item.notes || "Tambah catatan untuk kustom kue..."}
+                                            </span>
                                         </button>
                                     )}
                                 </div>
