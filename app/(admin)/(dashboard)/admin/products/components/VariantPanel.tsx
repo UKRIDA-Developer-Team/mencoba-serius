@@ -27,6 +27,7 @@ function formatIDR(value: number) {
 export function VariantPanel({ productId }: { productId: string }) {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
   const [form, setForm] = useState({ label: "", price: "" });
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ label: "", price: "" });
@@ -43,7 +44,8 @@ export function VariantPanel({ productId }: { productId: string }) {
 
   const addVariant = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.label.trim()) return;
+    if (!form.label.trim() || isAdding) return;
+    setIsAdding(true);
     try {
       const res = await authenticatedFetch(`/api/admin/products/${productId}/variants`, {
         method: "POST",
@@ -58,8 +60,11 @@ export function VariantPanel({ productId }: { productId: string }) {
         setVariants((prev) => [...prev, data.data]);
         setForm({ label: "", price: "" });
         toast.success("Varian ditambahkan");
+      } else {
+        toast.error(data.error || "Gagal menambah varian");
       }
     } catch { toast.error("Gagal menambah varian"); }
+    finally { setIsAdding(false); }
   };
 
   const saveEdit = async () => {
@@ -181,8 +186,12 @@ export function VariantPanel({ productId }: { productId: string }) {
           type="number"
           min={0}
         />
-        <Button type="submit" size="sm" className="h-7 text-xs gap-1">
-          <Plus className="size-3" /> Tambah
+        <Button type="submit" size="sm" className="h-7 text-xs gap-1" disabled={isAdding || !form.label.trim()}>
+          {isAdding ? (
+            <span className="size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+          ) : (
+            <Plus className="size-3" />
+          )} Tambah
         </Button>
       </form>
     </div>

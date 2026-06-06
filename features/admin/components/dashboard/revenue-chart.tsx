@@ -55,9 +55,11 @@ function formatIDR(value: number): string {
 /** Parse a date string and return a 3-letter day abbreviation in Indonesian */
 function toDayAbbr(dateStr: string): string {
     const days = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr.slice(0, 3);
-    return days[d.getDay()];
+    const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return "?";
+    const [, y, m, d] = match.map(Number);
+    const date = new Date(y, m - 1, d);
+    return days[date.getDay()];
 }
 
 /**

@@ -150,7 +150,7 @@ export async function createGuestOrder(
             const productId =
                 productResult.length > 0 ? productResult[0].id : undefined;
             
-            const nameParts = [item.name, !item.variantLabel ? `(${item.size})` : ''];
+            const nameParts = [item.name, `(${item.size})`];
             if (item.variantLabel) {
                 nameParts.push(`— ${item.variantLabel}`);
             }

@@ -253,16 +253,32 @@ export default function OrdersPage() {
                             <div key={item.id} className="flex flex-col sm:flex-row gap-3 p-3 rounded-lg border border-border/50 bg-card">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-sm font-medium">
-                                    {item.itemNameSnapshot.includes(" \u2014 ")
-                                      ? item.itemNameSnapshot.split(" \u2014 ")[0]
-                                      : item.itemNameSnapshot}
-                                  </p>
-                                  {item.itemNameSnapshot.includes(" \u2014 ") && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 text-accent text-xs font-medium">
-                                      {item.itemNameSnapshot.split(" \u2014 ")[1]}
-                                    </span>
-                                  )}
+                                  {(() => {
+                                    const dashIdx = item.itemNameSnapshot.indexOf(" \u2014 ");
+                                    const nameWithSize = dashIdx >= 0 ? item.itemNameSnapshot.slice(0, dashIdx) : item.itemNameSnapshot;
+                                    const variant = dashIdx >= 0 ? item.itemNameSnapshot.slice(dashIdx + 3) : null;
+                                    const sizeMatch = nameWithSize.match(/\(([^)]+)\)\s*$/);
+                                    const productName = sizeMatch ? nameWithSize.slice(0, sizeMatch.index).trim() : nameWithSize;
+                                    const size = sizeMatch ? sizeMatch[1] : null;
+
+                                    return (
+                                      <>
+                                        <p className="text-sm font-medium">{productName}</p>
+                                        {size && (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-medium">
+                                            {size}
+                                          </span>
+                                        )}
+                                        {variant ? (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 text-accent text-xs font-medium">
+                                            {variant}
+                                          </span>
+                                        ) : (
+                                          <span className="text-xs text-muted-foreground italic">Variant tidak tersedia</span>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
                                 </div>
                                 
                                 {/* Custom Cake Details */}

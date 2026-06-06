@@ -2,8 +2,7 @@ import Link from "next/link";
 import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 
 const catalogLinks = [
-    { label: "Semua Kue", href: "/catalog" },
-    { label: "Berdasarkan Kategori", href: "/category" },
+    { label: "Berdasarkan Katalog", href: "/catalog" },
     { label: "Kue Ulang Tahun", href: "/catalog?category=Birthday" },
     { label: "Kue Pernikahan", href: "/catalog?category=Wedding" },
     { label: "Kue Anniversary", href: "/catalog?category=Anniversary" },
@@ -74,7 +73,7 @@ export default function Footer() {
                         <div className="flex flex-col gap-2 text-sm">
                             {catalogLinks.map((link) => (
                                 <Link
-                                    key={link.href}
+                                    key={link.label}
                                     href={link.href}
                                     className="text-foreground/70 hover:text-primary transition-colors duration-150"
                                 >

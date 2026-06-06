@@ -89,7 +89,13 @@ function buildRangeConfig(range: DashboardRange) {
 }
 
 function toDateKey(value: unknown): string {
-  return String(value).slice(0, 10);
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+  const s = String(value);
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? s.slice(0, 10) : d.toISOString().slice(0, 10);
 }
 
 function fillDailyPointsIfNeeded(
@@ -105,41 +111,55 @@ function fillDailyPointsIfNeeded(
     }));
   }
 
-  // Query groups by truncated day (`bucket`), so each date key is unique.
-  const map = new Map(
-    rows.map((row) => [
-      toDateKey(row.bucket),
-      {
-        label: String(row.label),
-        revenue: Number(row.revenue),
-        orderCount: Number(row.order_count),
-      },
-    ])
-  );
+  // Gunakan waktu Jakarta (UTC+7) agar konsisten dengan database
+  const JAKARTA_OFFSET = 7 * 60 * 60 * 1000;
+  const nowJakarta = new Date(Date.now() + JAKARTA_OFFSET);
+  const jakartaDay = nowJakarta.getUTCDay(); // 0=Sun, 6=Sat
+  const offsetToMonday = jakartaDay === 0 ? 6 : jakartaDay - 1;
 
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const day = start.getDay(); // 0 = Sunday
-  const offsetToMonday = day === 0 ? 6 : day - 1;
-  start.setDate(start.getDate() - offsetToMonday);
+  // Start = Senin minggu ini dalam waktu Jakarta
+  const mondayJakarta = new Date(nowJakarta);
+  mondayJakarta.setUTCDate(nowJakarta.getUTCDate() - offsetToMonday);
+
   if (range === "last_week") {
-    start.setDate(start.getDate() - 7);
+    mondayJakarta.setUTCDate(mondayJakarta.getUTCDate() - 7);
   }
 
+  // Buat map dari data SQL menggunakan tanggal Jakarta
+  const map = new Map(
+    rows.map((row) => {
+      const bucket = row.bucket;
+      let key: string;
+      if (bucket instanceof Date) {
+        // Convert UTC Date ke tanggal Jakarta
+        const jakartaDate = new Date(bucket.getTime() + JAKARTA_OFFSET);
+        key = jakartaDate.toISOString().slice(0, 10);
+      } else {
+        key = String(bucket).slice(0, 10);
+      }
+      return [key, {
+        revenue: Number(row.revenue),
+        orderCount: Number(row.order_count),
+      }];
+    })
+  );
+
   const labels = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
-  const points: Array<{ date: string; label: string; revenue: number; orderCount: number }> = [];
+  const points = [];
+
   for (let i = 0; i < 7; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
+    const d = new Date(mondayJakarta);
+    d.setUTCDate(mondayJakarta.getUTCDate() + i);
     const key = d.toISOString().slice(0, 10);
     const found = map.get(key);
     points.push({
       date: key,
-      label: found?.label || labels[i],
-      revenue: found?.revenue || 0,
-      orderCount: found?.orderCount || 0,
+      label: labels[i],
+      revenue: found?.revenue ?? 0,
+      orderCount: found?.orderCount ?? 0,
     });
   }
+
   return points;
 }
 
