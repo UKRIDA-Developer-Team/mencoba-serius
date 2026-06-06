@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import {
   ingredientStockMovements,
@@ -133,6 +134,8 @@ const postHandler = async (request: NextRequest) => {
         referenceType: "stock_opname",
       })
       .returning();
+
+    revalidateTag("products", "max");
 
     return NextResponse.json(
       {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import {
   ingredientUnitMap,
@@ -158,6 +159,8 @@ const postHandler = async (request: NextRequest) => {
       })
       .returning();
 
+    revalidateTag("products", "max");
+
     return NextResponse.json(
       {
         success: true,
@@ -206,6 +209,8 @@ const deleteHandler = async (request: NextRequest) => {
         { status: 404 }
       );
     }
+
+    revalidateTag("products", "max");
 
     return NextResponse.json(
       {

@@ -4,6 +4,8 @@ import Link from "next/link";
 import AddToCartButton from "@/features/guest/components/cart/AddToCartButton";
 import { getProducts, getVariantsForProducts } from "@/lib/data/product";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
     title: "Katalog Kue - Pilih Kue Favorit Anda | Chef On Pointe",
     description: "Jelajahi koleksi lengkap kue custom kami. Kue ulang tahun, pernikahan, anniversary, dan pastry spesial lainnya.",
@@ -94,7 +96,7 @@ export default async function CatalogPage({
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {products.map((product) => {
-                        const variants = variantMap.get(product.id) || [];
+                        const variants = variantMap[product.id] || [];
                         return (
                             <article
                                 key={product.slug}

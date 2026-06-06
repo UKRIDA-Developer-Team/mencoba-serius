@@ -5,6 +5,8 @@ import Products from "@/features/guest/components/layouts/Products";
 import Recomendation from "@/features/guest/components/layouts/Recomendation";
 import Testimonial from "@/features/guest/components/layouts/Testimonial";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "Beranda - Kue Custom & Pastry Artisan | Chef On Pointe",
   description: "Pesan kue custom dan pastry artisan untuk ulang tahun, pernikahan, anniversary, dan acara spesial Anda. Dibuat dengan bahan berkualitas tinggi.",

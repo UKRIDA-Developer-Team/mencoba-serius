@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getAdminProducts } from "@/lib/data/admin";
 import { db } from "@/lib/db";
 import { products, productCategories } from "@/lib/schema";
@@ -85,6 +86,8 @@ const postHandler = async (request: NextRequest) => {
       .returning();
 
     console.log("Product created successfully:", result[0]);
+
+    revalidateTag("products", "max");
 
     return NextResponse.json(
       {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { products, productCategories } from "@/lib/schema";
 import { eq } from "drizzle-orm";
@@ -37,6 +38,8 @@ const patchHandler = async (
         { status: 404 }
       );
     }
+
+    revalidateTag("products", "max");
 
     return NextResponse.json(
       {
@@ -120,6 +123,8 @@ const putHandler = async (
       );
     }
 
+    revalidateTag("products", "max");
+
     return NextResponse.json(
       {
         success: true,
@@ -169,6 +174,8 @@ const deleteHandler = async (
         { status: 404 }
       );
     }
+
+    revalidateTag("products", "max");
 
     return NextResponse.json(
       {

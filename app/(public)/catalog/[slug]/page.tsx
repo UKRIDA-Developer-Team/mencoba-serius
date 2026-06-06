@@ -2,7 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductActions from "@/features/guest/components/catalog/ProductActions";
-import { getProductBySlug, getVariantsByProductId } from "@/lib/data/product";
+import { getProductBySlug, getVariantsByProductId, getAllProductSlugs } from "@/lib/data/product";
+
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+    const slugs = await getAllProductSlugs();
+    return slugs.map((slug) => ({ slug }));
+}
 
 export default async function CatalogSlugPage({
     params,
@@ -27,7 +34,6 @@ export default async function CatalogSlugPage({
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-                {/* Product image */}
                 <div className="relative aspect-square rounded-2xl overflow-hidden bg-card border border-border">
                     <Image
                         src={product.image}
@@ -38,7 +44,6 @@ export default async function CatalogSlugPage({
                     />
                 </div>
 
-                {/* Product details */}
                 <div className="flex flex-col gap-4">
                     <div>
                         <p className="text-xs tracking-wide uppercase text-foreground/70">{product.category}</p>

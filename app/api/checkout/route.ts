@@ -1,4 +1,5 @@
 import { type NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { createGuestOrder } from "@/lib/data/checkout";
 
@@ -50,6 +51,8 @@ export async function POST(request: NextRequest) {
                 { status: 500 }
             );
         }
+
+        revalidateTag("products", "max");
 
         return Response.json({
             success: true,

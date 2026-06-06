@@ -2,9 +2,16 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProductBySlug } from "@/lib/data/product";
+import { getProductBySlug, getAllProductSlugs } from "@/lib/data/product";
 import AddToCartButton from "@/features/guest/components/cart/AddToCartButton";
 import { Button } from "@/components/ui/button";
+
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+    const slugs = await getAllProductSlugs();
+    return slugs.map((slug) => ({ slug }));
+}
 
 export async function generateMetadata({
     params,

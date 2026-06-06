@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { customers, salesOrders, salesOrderItems, customCakeRequests, productRecipeIngredients, ingredientStockMovements } from "@/lib/schema";
 import { desc, eq, inArray } from "drizzle-orm";
@@ -171,6 +172,8 @@ const postHandler = async (request: NextRequest) => {
       })
       .returning();
 
+    revalidateTag("products", "max");
+
     return NextResponse.json(
       {
         success: true,
@@ -230,6 +233,7 @@ const patchHandler = async (request: NextRequest) => {
 
     // Auto-deduct stock if changing to COMPLETED
     if (status === "COMPLETED" && existingOrder[0].status !== "COMPLETED") {
+      revalidateTag("products", "max");
       // 1. Get all items for this order
       const items = await db
         .select({ productId: salesOrderItems.productId, quantity: salesOrderItems.quantity })

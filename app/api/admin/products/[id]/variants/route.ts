@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { productVariants, products } from "@/lib/schema";
 import { eq, asc } from "drizzle-orm";
@@ -81,6 +82,9 @@ const postHandler = async (request: NextRequest) => {
       })
       .returning();
 
+    revalidateTag("products", "max");
+    revalidateTag("variants", "max");
+
     return NextResponse.json({
       success: true,
       data: {
@@ -124,6 +128,9 @@ const putHandler = async (request: NextRequest) => {
       return NextResponse.json({ success: false, error: "Variant not found" }, { status: 404 });
     }
 
+    revalidateTag("products", "max");
+    revalidateTag("variants", "max");
+
     return NextResponse.json({
       success: true,
       data: {
@@ -150,6 +157,10 @@ const deleteHandler = async (request: NextRequest) => {
     }
 
     await db.delete(productVariants).where(eq(productVariants.id, BigInt(variantId)));
+
+    revalidateTag("products", "max");
+    revalidateTag("variants", "max");
+
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ success: false, error: "Failed to delete variant" }, { status: 500 });
